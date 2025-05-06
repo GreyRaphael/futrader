@@ -1,0 +1,18 @@
+[ctp]
+dylib_path = "ctp/lin64"
+front_md = "tcp://211.136.125.127:51213"
+front_td = "tcp://211.136.125.127:51205"
+broker_id = ""
+user_id = "your_id"
+password = "your_pwd"
+
+[openctp]
+dylib_path = "openctp/lin64"
+front_md = "tcp://121.37.80.177:20004"
+front_td = "tcp://121.37.80.177:20002"
+broker_id = ""
+user_id = "your_id"
+password = "your_pwd"
+
+[default]
+mode = "openctp"
