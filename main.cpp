@@ -4,7 +4,9 @@
 #include <print>
 
 #include "ThostFtdcMdApi.h"
+#include "ThostFtdcTraderApi.h"
 #include "mdclient.h"
+#include "tdclient.h"
 
 int main(int, char **) {
     auto config = toml::parse_file("config.toml");
@@ -23,17 +25,24 @@ int main(int, char **) {
     std::println("user_id:{}", user_id);
     std::println("password:{}", password);
 
-    dylib lib{dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations};
-    auto getver = lib.get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
-    std::println("ver={}", getver());
+    dylib lib_md{dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations};
+    dylib lib_td{dylib_path, "thosttraderapi_se.so", dylib::no_filename_decorations};
 
-    // auto create_api = lib.get<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
-    auto create_api = lib.get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
-    auto mdapi = create_api("", false, false);
+    auto get_md_ver = lib_md.get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
+    auto get_td_ver = lib_td.get_function<const char *()>("_ZN19CThostFtdcTraderApi13GetApiVersionEv");
+    std::println("md_ver={}", get_md_ver());
+    std::println("td_ver={}", get_td_ver());
+
+    auto create_mdapi = lib_md.get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
+    auto create_tdapi = lib_td.get_function<CThostFtdcTraderApi *(const char *)>("_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKc");
+    auto mdapi = create_mdapi("", false, false);
+    auto tdapi = create_tdapi("");
 
     MdClient client{mdapi, user_id};
+    // TdClient tdcli{tdapi, user_id};
+
     mdapi->RegisterSpi(&client);
-    mdapi->RegisterFront(const_cast<char*>(front_md));
+    mdapi->RegisterFront(const_cast<char *>(front_md));
     mdapi->Init();
     mdapi->Join();
 

@@ -12,6 +12,10 @@ add_library(mdclient src/md/mdclient.cpp)
 # PUBLIC then executable can use the header files
 target_include_directories(mdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
 
+add_library(tdclient src/td/tdclient.cpp)
+# PUBLIC then executable can use the header files
+target_include_directories(tdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
+
 add_executable(futrader main.cpp)
 
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
@@ -21,4 +25,6 @@ find_package(tomlplusplus CONFIG REQUIRED)
 target_link_libraries(futrader PRIVATE tomlplusplus::tomlplusplus)
 
 target_include_directories(futrader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/md)
+target_include_directories(futrader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/td)
 target_link_libraries(futrader PRIVATE mdclient)
+target_link_libraries(futrader PRIVATE tdclient)
