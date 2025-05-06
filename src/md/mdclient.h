@@ -1,6 +1,6 @@
 #include "ThostFtdcMdApi.h"
 
-struct MdClient : public CThostFtdcMdSpi {
+struct MdClient : CThostFtdcMdSpi {
     MdClient(CThostFtdcMdApi *api, const char *uid) : _mdapi(api), user_id(uid) {}
     ~MdClient() {}
 

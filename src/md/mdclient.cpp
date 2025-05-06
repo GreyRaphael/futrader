@@ -18,7 +18,7 @@ void MdClient::OnFrontDisconnected(int nReason) {
 
 void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     std::println("OnRspUserLogin");
-    std::println("login at {}", pRspUserLogin->LoginTime);
+    std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
     if (bIsLast) {
         std::vector<char *> symbols{"MA509", "rb2509"};
         int count = symbols.size();
