@@ -1,9 +1,30 @@
+#include <dylib.hpp>
+#include <optional>
+#include <semaphore>
+#include <string>
+
 #include "ThostFtdcTraderApi.h"
 
-struct TdClient : CThostFtdcTraderSpi {
-    TdClient(CThostFtdcTraderApi *api, const char *uid) : _tdapi(api), user_id(uid) {}
-    ~TdClient() {}
+struct TdConfig {
+    std::string mode;
+    std::string platform;
+    std::string front_td;
+    std::string auth_id;
+    std::string auth_code;
+    std::string broker_id;
+    std::string user_id;
+    std::string password;
+};
 
+struct TdClient : CThostFtdcTraderSpi {
+    TdClient() {}
+    ~TdClient() { _tdapi->Release(); }
+
+    void Start();
+    void ReqSettlementInfo();
+    void QryInvestorPosition();
+
+   private:
     void OnFrontConnected() override;
     void OnFrontDisconnected(int nReason) override;
     void OnHeartBeatWarning(int nTimeLapse) override;
@@ -12,7 +33,9 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
+    TdConfig _config{};
     CThostFtdcTraderApi *_tdapi{};
-    const char *user_id{};
-    int request_id{0};
+    std::binary_semaphore _sem{0};
+    std::optional<dylib> _lib_td{};
+    int _reqId{0};
 };
