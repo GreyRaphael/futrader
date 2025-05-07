@@ -89,6 +89,7 @@ void TdClient::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticat
 
 void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     std::println("OnRspUserLogin");
+    std::println("err_id={},msg={}", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
     std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
     if (bIsLast) {
         _sem.release();
