@@ -61,8 +61,8 @@ void TdClient::Start() {
     // login
     CThostFtdcReqUserLoginField login_req{};
     _config.broker_id.copy(login_req.BrokerID, _config.broker_id.length());
-    _config.user_id.copy(login_req.BrokerID, _config.user_id.length());
-    _config.password.copy(login_req.BrokerID, _config.password.length());
+    _config.user_id.copy(login_req.UserID, _config.user_id.length());
+    _config.password.copy(login_req.Password, _config.password.length());
     _tdapi->ReqUserLogin(&login_req, ++_reqId);
     _sem.acquire();
 }
@@ -133,6 +133,22 @@ void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
         std::println("hold nothing");
     }
 
+    if (bIsLast) {
+        _sem.release();
+    }
+}
+
+void TdClient::QryTradingAccount() {
+    CThostFtdcQryTradingAccountField req{};
+    _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
+    _config.user_id.copy(req.InvestorID, _config.user_id.length());
+    auto ret = _tdapi->ReqQryTradingAccount(&req, ++_reqId);
+    _sem.acquire();
+}
+
+void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    std::println("OnRspQryTradingAccount");
+    std::println("available={}", pTradingAccount->Available);
     if (bIsLast) {
         _sem.release();
     }

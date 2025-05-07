@@ -23,6 +23,7 @@ struct TdClient : CThostFtdcTraderSpi {
     void Start();
     void ReqSettlementInfo();
     void QryInvestorPosition();
+    void QryTradingAccount();
 
    private:
     void OnFrontConnected() override;
@@ -32,6 +33,7 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+    void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
     TdConfig _config{};
     CThostFtdcTraderApi *_tdapi{};

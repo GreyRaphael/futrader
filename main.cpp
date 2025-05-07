@@ -9,6 +9,7 @@ int main(int, char **) {
     TdClient td_cli{};
     td_cli.Start();
     td_cli.ReqSettlementInfo();
+    td_cli.QryTradingAccount();
     td_cli.QryInvestorPosition();
     getchar();
 }
