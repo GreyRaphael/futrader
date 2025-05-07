@@ -1,15 +1,53 @@
 #include "mdclient.h"
 
+#include <toml++/toml.h>
+
 #include <cstring>
+#include <dylib.hpp>
+#include <format>
 #include <print>
 #include <vector>
 
+MdConfig ReadConfig(std::string_view filename) {
+    auto config = toml::parse_file(filename);
+    std::string mode = config["default"]["mode"].value_or("openctp");
+    std::string platform = config["default"]["platform"].value_or("lin64");
+    std::string front_md = config[mode]["front_md"].value_or("");
+    std::string user_id = config[mode]["user_id"].value_or("");
+    return MdConfig{mode, platform, front_md, user_id};
+}
+
+void MdClient::Start() {
+    // read config
+    _config = ReadConfig("config.toml");
+
+    // load dylib
+    auto dylib_path = std::format("{}/{}", _config.mode, _config.platform);
+    // inplace-construct the dylib inside the optional
+    _lib_md.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
+    auto GetApiVersion = _lib_md->get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
+    std::println("md_ver={}", GetApiVersion());
+    auto CreateFtdcMdApi = _lib_md->get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
+
+    // register
+    _mdapi = CreateFtdcMdApi("", false, false);
+    _mdapi->RegisterSpi(this);
+    _mdapi->RegisterFront(_config.front_md.data());
+
+    // connect
+    _mdapi->Init();
+    _sem.acquire();
+
+    // login
+    CThostFtdcReqUserLoginField req{};
+    _config.user_id.copy(req.UserID, _config.user_id.length());
+    _mdapi->ReqUserLogin(&req, 1);
+    _sem.acquire();
+}
+
 void MdClient::OnFrontConnected() {
     std::println("OnFrontConnected");
-
-    CThostFtdcReqUserLoginField req{};
-    strcpy(req.UserID, user_id);
-    _mdapi->ReqUserLogin(&req, 1);
+    _sem.release();
 }
 
 void MdClient::OnFrontDisconnected(int nReason) {
@@ -20,15 +58,26 @@ void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
     std::println("OnRspUserLogin");
     std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
     if (bIsLast) {
-        std::vector<char *> symbols{"MA509", "rb2509"};
-        int count = symbols.size();
-        _mdapi->SubscribeMarketData(symbols.data(), count);
+        _sem.release();
     }
 };
+
+void MdClient::Subscribe(std::vector<std::string> symbols) {
+    std::vector<char *> symbol_pointers;
+    symbol_pointers.reserve(64);
+    for (auto &e : symbols) {
+        symbol_pointers.push_back(e.data());
+    }
+    _mdapi->SubscribeMarketData(symbol_pointers.data(), symbol_pointers.size());
+    _sem.acquire();
+}
 
 void MdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     std::println("OnRspSubMarketData");
     std::println("sub {}", pSpecificInstrument->InstrumentID);
+    if (bIsLast) {
+        _sem.release();
+    }
 }
 
 void MdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
