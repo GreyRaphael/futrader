@@ -15,7 +15,7 @@ struct MdConfig {
 
 struct MdClient : CThostFtdcMdSpi {
     MdClient() {}
-    ~MdClient() {}
+    ~MdClient() { _mdapi->Release(); }
 
     void Start();
     void Subscribe(std::vector<std::string> symbols);
