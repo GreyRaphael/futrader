@@ -12,14 +12,14 @@ find_package(tomlplusplus CONFIG REQUIRED)
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
 add_library(mdclient src/md/mdclient.cpp)
-target_include_directories(mdclient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
+target_include_directories(mdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
 target_link_libraries(mdclient PRIVATE tomlplusplus::tomlplusplus)
-target_include_directories(mdclient PRIVATE ${DYLIB_INCLUDE_DIRS})
+target_include_directories(mdclient PUBLIC ${DYLIB_INCLUDE_DIRS})
 
 add_library(tdclient src/td/tdclient.cpp)
-target_include_directories(tdclient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
+target_include_directories(tdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
 target_link_libraries(tdclient PRIVATE tomlplusplus::tomlplusplus)
-target_include_directories(tdclient PRIVATE ${DYLIB_INCLUDE_DIRS})
+target_include_directories(tdclient PUBLIC ${DYLIB_INCLUDE_DIRS})
 
 add_executable(futrader main.cpp)
 
