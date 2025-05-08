@@ -1,4 +1,5 @@
 #include <dylib.hpp>
+#include <map>
 #include <optional>
 #include <semaphore>
 #include <string>
@@ -35,6 +36,7 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
+    std::map<int, std::string> _err_map{};
     TdConfig _config{};
     CThostFtdcTraderApi *_tdapi{};
     std::binary_semaphore _sem{0};

@@ -6,9 +6,8 @@
 #include <dylib.hpp>
 #include <format>
 #include <print>
-#include <ylt/reflection/member_count.hpp>
-
-#include "ylt/reflection/member_value.hpp"
+#include <utils/parser.hpp>
+#include <utils/repr.hpp>
 
 TdConfig ReadConfig(std::string_view filename) {
     auto config = toml::parse_file(filename);
@@ -33,6 +32,9 @@ TdConfig ReadConfig(std::string_view filename) {
 }
 
 void TdClient::Start() {
+    // read error mapping
+    _err_map = load_errors("errors.toml");
+
     // read config
     _config = ReadConfig("config.toml");
 
@@ -84,16 +86,30 @@ void TdClient::OnHeartBeatWarning(int nTimeLapse) {
 }
 
 void TdClient::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    std::println("OnRspAuthenticate");
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspAuthenticate, {}", _err_map[pRspInfo->ErrorID]);
+        return;
+    }
+
+    if (pRspAuthenticateField) {
+        print_struct(pRspAuthenticateField);
+    }
+
     if (bIsLast) {
         _sem.release();
     }
 }
 
 void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    std::println("OnRspUserLogin");
-    std::println("err_id={},msg={}", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
-    std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspUserLogin, {}", _err_map[pRspInfo->ErrorID]);
+        return;
+    }
+
+    if (pRspUserLogin) {
+        print_struct(pRspUserLogin);
+    }
+
     if (bIsLast) {
         _sem.release();
     }
@@ -108,15 +124,15 @@ void TdClient::ReqSettlementInfo() {
 }
 
 void TdClient::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    std::println("OnRspSettlementInfoConfirm");
-    std::println("brokder_id={}, investor_id={}, confirm_date={}, confirm_time={}, settle_id={}, account_id={}, currency_id={}",
-                 pSettlementInfoConfirm->BrokerID,
-                 pSettlementInfoConfirm->InvestorID,
-                 pSettlementInfoConfirm->ConfirmDate,
-                 pSettlementInfoConfirm->ConfirmTime,
-                 pSettlementInfoConfirm->SettlementID,
-                 pSettlementInfoConfirm->AccountID,
-                 pSettlementInfoConfirm->CurrencyID);
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspSettlementInfoConfirm, {}", _err_map[pRspInfo->ErrorID]);
+        return;
+    }
+
+    if (pSettlementInfoConfirm) {
+        print_struct(pSettlementInfoConfirm);
+    }
+
     if (bIsLast) {
         _sem.release();
     }
@@ -129,10 +145,13 @@ void TdClient::QryInvestorPosition() {
 }
 
 void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    std::println("OnRspQryInvestorPosition");
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspQryInvestorPosition, {}", _err_map[pRspInfo->ErrorID]);
+        return;
+    }
 
     if (pInvestorPosition) {
-        std::println("symbol={},position={},side={},fee={}", pInvestorPosition->InstrumentID, pInvestorPosition->Position, pInvestorPosition->PosiDirection, pInvestorPosition->Commission);
+        print_struct(pInvestorPosition);
     } else {
         std::println("hold nothing");
     }
@@ -151,16 +170,15 @@ void TdClient::QryTradingAccount() {
 }
 
 void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    auto v = ylt::reflection::members_count<CThostFtdcTradingAccountField>();
-    std::println("count={}", v);
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspQryTradingAccount, {}", _err_map[pRspInfo->ErrorID]);
+        return;
+    }
 
-    // 遍历对象的字段、字段名、字段索引, 并打印
-    ylt::reflection::for_each(*pTradingAccount, [](auto &field, auto name, auto index) {
-        std::println("\t{}:{}", name, field);
-    });
+    if (pTradingAccount) {
+        print_struct(pTradingAccount);
+    }
 
-    std::println("OnRspQryTradingAccount");
-    std::println("available={}", pTradingAccount->Available);
     if (bIsLast) {
         _sem.release();
     }
