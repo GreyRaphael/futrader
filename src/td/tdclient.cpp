@@ -98,8 +98,8 @@ void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
 
 void TdClient::ReqSettlementInfo() {
     CThostFtdcSettlementInfoConfirmField req{};
-    _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
-    _config.user_id.copy(req.InvestorID, _config.user_id.length());
+    // _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
+    // _config.user_id.copy(req.InvestorID, _config.user_id.length());
     _tdapi->ReqSettlementInfoConfirm(&req, ++_reqId);
     _sem.acquire();
 }
@@ -129,7 +129,7 @@ void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
     std::println("OnRspQryInvestorPosition");
 
     if (pInvestorPosition) {
-        std::println("symbol={},position={}", pInvestorPosition->InstrumentID, pInvestorPosition->Position);
+        std::println("symbol={},position={},side={},fee={}", pInvestorPosition->InstrumentID, pInvestorPosition->Position, pInvestorPosition->PosiDirection, pInvestorPosition->Commission);
     } else {
         std::println("hold nothing");
     }
@@ -141,8 +141,8 @@ void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
 
 void TdClient::QryTradingAccount() {
     CThostFtdcQryTradingAccountField req{};
-    _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
-    _config.user_id.copy(req.InvestorID, _config.user_id.length());
+    // _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
+    // _config.user_id.copy(req.InvestorID, _config.user_id.length());
     auto ret = _tdapi->ReqQryTradingAccount(&req, ++_reqId);
     _sem.acquire();
 }

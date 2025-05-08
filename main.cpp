@@ -4,7 +4,7 @@
 int main(int, char **) {
     // MdClient md_cli{};
     // md_cli.Start();
-    // md_cli.Subscribe({"MA509", "rb2509"});
+    // md_cli.Subscribe({"MA505", "rb2507"});
 
     TdClient td_cli{};
     td_cli.Start();
