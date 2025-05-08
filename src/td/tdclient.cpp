@@ -6,6 +6,9 @@
 #include <dylib.hpp>
 #include <format>
 #include <print>
+#include <ylt/reflection/member_count.hpp>
+
+#include "ylt/reflection/member_value.hpp"
 
 TdConfig ReadConfig(std::string_view filename) {
     auto config = toml::parse_file(filename);
@@ -148,6 +151,14 @@ void TdClient::QryTradingAccount() {
 }
 
 void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    auto v = ylt::reflection::members_count<CThostFtdcTradingAccountField>();
+    std::println("count={}", v);
+
+    // 遍历对象的字段、字段名、字段索引, 并打印
+    ylt::reflection::for_each(*pTradingAccount, [](auto &field, auto name, auto index) {
+        std::println("\t{}:{}", name, field);
+    });
+
     std::println("OnRspQryTradingAccount");
     std::println("available={}", pTradingAccount->Available);
     if (bIsLast) {
