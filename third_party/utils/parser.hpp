@@ -4,7 +4,6 @@
 #include <charconv>
 #include <expected>
 #include <string>
-#include <unordered_map>
 
 inline std::expected<int, std::string> sv2int(std::string_view input) {
     int value{};
@@ -21,9 +20,9 @@ inline std::expected<int, std::string> sv2int(std::string_view input) {
     return std::unexpected("Unknown conversion error");
 }
 
-inline std::unordered_map<int, std::string> load_errors(std::string_view filename) {
+inline std::map<int, std::string> load_errors(std::string_view filename) {
     auto tbl = toml::parse_file(filename);
-    std::unordered_map<int, std::string> errs{};
+    std::map<int, std::string> errs{};
     for (auto &[k, v] : tbl) {
         auto k_expected = sv2int(k.str());
         if (k_expected) {
