@@ -10,6 +10,18 @@
 #include <string>
 #include <utils/parser.hpp>
 #include <vector>
+#include <ylt/reflection/member_names.hpp>
+#include <ylt/reflection/member_value.hpp>
+
+template <typename T>
+void print_struct(T *ptr) noexcept {
+    auto name = ylt::reflection::get_struct_name<T>();
+    std::print("{}\n\t", name);
+    ylt::reflection::for_each(*ptr, [](auto &field, auto name, auto index) {
+        std::print("{}:{} | ", name, field);
+    });
+    std::println();
+}
 
 MdConfig ReadConfig(std::string_view filename) {
     auto config = toml::parse_file(filename);
@@ -79,7 +91,7 @@ void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
     }
 
     if (pRspUserLogin) {
-        std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
+        print_struct(pRspUserLogin);
     }
 
     if (bIsLast) {
@@ -98,13 +110,20 @@ void MdClient::Subscribe(std::vector<std::string> symbols) {
 }
 
 void MdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    std::println("OnRspSubMarketData");
-    std::println("sub {}", pSpecificInstrument->InstrumentID);
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspSubMarketData, {}", _err_map[pRspInfo->ErrorID]);
+        return;
+    }
+
+    if (pSpecificInstrument) {
+        print_struct(pSpecificInstrument);
+    }
+
     if (bIsLast) {
         _sem.release();
     }
 }
 
 void MdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
-    std::println("{}, px={}, at {} {} {}", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice, pDepthMarketData->ActionDay, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
+    print_struct(pDepthMarketData);
 }
