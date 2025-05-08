@@ -1,4 +1,5 @@
 #include <dylib.hpp>
+#include <map>
 #include <optional>
 #include <semaphore>
 #include <string>
@@ -27,6 +28,7 @@ struct MdClient : CThostFtdcMdSpi {
     void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) override;
 
+    std::map<int, std::string> _err_map{};
     MdConfig _config{};
     CThostFtdcMdApi *_mdapi{};
     std::binary_semaphore _sem{0};

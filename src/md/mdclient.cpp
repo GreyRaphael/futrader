@@ -5,7 +5,10 @@
 #include <cstring>
 #include <dylib.hpp>
 #include <format>
+#include <map>
 #include <print>
+#include <string>
+#include <utils/parser.hpp>
 #include <vector>
 
 MdConfig ReadConfig(std::string_view filename) {
@@ -18,6 +21,9 @@ MdConfig ReadConfig(std::string_view filename) {
 }
 
 void MdClient::Start() {
+    // read error mapping
+    _err_map = load_errors("errors.toml");
+
     // read config
     _config = ReadConfig("config.toml");
 
@@ -50,13 +56,26 @@ void MdClient::OnFrontConnected() {
     _sem.release();
 }
 
+std::map<int, std::string> DisconnectionMap{
+    {0x1001, "网络读失败"},
+    {0x1002, "网络写失败"},
+    {0x2001, "接收心跳超时"},
+    {0x2002, "发送心跳失败"},
+    {0x2003, "收到错误报文"},
+};
+
 void MdClient::OnFrontDisconnected(int nReason) {
-    std::println("OnFrontDisconnected, reason={}", nReason);
+    std::println("OnFrontDisconnected: {}", DisconnectionMap[nReason]);
 }
 
 void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    std::println("OnRspUserLogin");
-    std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
+    if (0 != pRspInfo->ErrorID) {
+        std::println("OnRspUserLogin, {}", _err_map[pRspInfo->ErrorID]);
+    } else {
+        if (pRspUserLogin) {
+            std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
+        }
+    }
     if (bIsLast) {
         _sem.release();
     }
