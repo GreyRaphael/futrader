@@ -68,14 +68,20 @@ void MdClient::OnFrontDisconnected(int nReason) {
     std::println("OnFrontDisconnected: {}", DisconnectionMap[nReason]);
 }
 
+void MdClient::OnHeartBeatWarning(int nTimeLapse) {
+    std::println("OnHeartBeatWarning: {}", nTimeLapse);
+}
+
 void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     if (0 != pRspInfo->ErrorID) {
         std::println("OnRspUserLogin, {}", _err_map[pRspInfo->ErrorID]);
-    } else {
-        if (pRspUserLogin) {
-            std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
-        }
+        return;
     }
+
+    if (pRspUserLogin) {
+        std::println("{} login at {} {}", pRspUserLogin->UserID, pRspUserLogin->TradingDay, pRspUserLogin->LoginTime);
+    }
+
     if (bIsLast) {
         _sem.release();
     }

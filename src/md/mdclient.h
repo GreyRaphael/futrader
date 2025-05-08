@@ -24,6 +24,7 @@ struct MdClient : CThostFtdcMdSpi {
    private:
     void OnFrontConnected() override;
     void OnFrontDisconnected(int nReason) override;
+    void OnHeartBeatWarning(int nTimeLapse) override;
     void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) override;

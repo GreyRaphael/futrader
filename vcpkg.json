@@ -1,8 +1,9 @@
 {
-    "dependencies": [
-        "fmt",
-        "tomlplusplus",
-        "dylib",
-        "nanobind"
-    ]
+  "dependencies": [
+    "dylib",
+    "fmt",
+    "nanobind",
+    "tomlplusplus",
+    "frozen"
+  ]
 }
