@@ -10,15 +10,18 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(tomlplusplus CONFIG REQUIRED)
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
+find_package(frozen CONFIG REQUIRED)
 
 add_library(mdclient src/md/mdclient.cpp)
 target_include_directories(mdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
+target_link_libraries(mdclient PRIVATE frozen::frozen frozen::frozen-headers)
 target_include_directories(mdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 target_link_libraries(mdclient PRIVATE tomlplusplus::tomlplusplus)
 target_include_directories(mdclient PUBLIC ${DYLIB_INCLUDE_DIRS})
 
 add_library(tdclient src/td/tdclient.cpp)
 target_include_directories(tdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
+target_link_libraries(tdclient PRIVATE frozen::frozen frozen::frozen-headers)
 target_include_directories(tdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 target_link_libraries(tdclient PRIVATE tomlplusplus::tomlplusplus)
 target_include_directories(tdclient PUBLIC ${DYLIB_INCLUDE_DIRS})
