@@ -15,13 +15,13 @@ struct TdClient : CThostFtdcTraderSpi {
     void QryTradingAccount();
     void OrderAction();
 
-    void Buy();
-    void Sell();
-    void SellShort();
-    void Buy2Cover();
+    bool Buy(std::string_view symbol, int lot, double price);
+    bool Sell(std::string_view symbol, int lot, double price);
+    bool SellShort(std::string_view symbol, int lot, double price);
+    bool Buy2Cover(std::string_view symbol, int lot, double price);
 
    private:
-    void OrderInsert();
+    void OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, char price_type);
 
    private:
     void OnFrontConnected() override;

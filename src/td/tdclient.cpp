@@ -4,8 +4,10 @@
 #include <format>
 #include <memory>
 #include <optional>
+#include <string_view>
 
 #include "../utils.hpp"
+#include "ThostFtdcUserApiDataType.h"
 
 struct TdClient::Impl {
     CtpConfig cfg{};
@@ -116,8 +118,18 @@ void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAcc
 }
 
 // insert order
-void TdClient::OrderInsert() {
+void TdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, char price_type = 'L') {
     CThostFtdcInputOrderField req{};
+    req.Direction = direction;
+    req.CombOffsetFlag[0] = offset;
+    req.VolumeTotalOriginal = lot;
+    if ('S' == price_type) {
+        // stop order
+        req.StopPrice = price;
+    } else if ('L' == price_type) {
+        // limit order
+        req.LimitPrice = price;
+    }
     // todo
     _tdapi->ReqOrderInsert(&req, ++_reqId);
 }
@@ -136,24 +148,24 @@ void TdClient::OnRtnTrade(CThostFtdcTradeField *pTrade) {
     print_struct(pTrade);
 }
 
-void TdClient::Buy() {
+bool TdClient::Buy(std::string_view symbol, int lot, double price) {
     // todo
-    this->OrderInsert();
+    this->OrderInsert(symbol, THOST_FTDC_D_Buy, THOST_FTDC_OF_Open, price, lot);
 }
 
-void TdClient::Sell() {
+bool TdClient::Sell(std::string_view symbol, int lot, double price) {
     // todo
-    this->OrderInsert();
+    this->OrderInsert(symbol, THOST_FTDC_D_Sell, THOST_FTDC_OF_Close, price, lot);
 }
 
-void TdClient::SellShort() {
+bool TdClient::SellShort(std::string_view symbol, int lot, double price) {
     // todo
-    this->OrderInsert();
+    this->OrderInsert(symbol, THOST_FTDC_D_Sell, THOST_FTDC_OF_Open, price, lot);
 }
 
-void TdClient::Buy2Cover() {
+bool TdClient::Buy2Cover(std::string_view symbol, int lot, double price) {
     // todo
-    this->OrderInsert();
+    this->OrderInsert(symbol, THOST_FTDC_D_Buy, THOST_FTDC_OF_Close, price, lot);
 }
 
 // cancel order
