@@ -1,24 +1,12 @@
-#include <dylib.hpp>
-#include <optional>
+#include <ThostFtdcTraderApi.h>
+
+#include <memory>
 #include <semaphore>
-#include <string>
-
-#include "ThostFtdcTraderApi.h"
-
-struct TdConfig {
-    std::string mode;
-    std::string platform;
-    std::string front_td;
-    std::string auth_id;
-    std::string auth_code;
-    std::string broker_id;
-    std::string user_id;
-    std::string password;
-};
+#include <string_view>
 
 struct TdClient : CThostFtdcTraderSpi {
-    TdClient() {}
-    ~TdClient() { _tdapi->Release(); }
+    TdClient(std::string_view cfg_file);
+    ~TdClient();
 
     void Start();
     void ReqSettlementInfo();
@@ -35,8 +23,10 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
+    struct Impl;
+    std::unique_ptr<Impl> pImpl;
+
     CThostFtdcTraderApi *_tdapi{};
     std::binary_semaphore _sem{0};
-    std::optional<dylib> _lib_td{};
     int _reqId{0};
 };
