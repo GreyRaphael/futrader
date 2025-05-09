@@ -1,22 +1,13 @@
-#include <dylib.hpp>
-#include <map>
-#include <optional>
+#include <ThostFtdcMdApi.h>
+
+#include <memory>
 #include <semaphore>
 #include <string>
 #include <vector>
 
-#include "ThostFtdcMdApi.h"
-
-struct MdConfig {
-    std::string mode;
-    std::string platform;
-    std::string front_md;
-    std::string user_id;
-};
-
 struct MdClient : CThostFtdcMdSpi {
-    MdClient() {}
-    ~MdClient() { _mdapi->Release(); }
+    MdClient(std::string_view cfg_file);
+    ~MdClient();
 
     void Start();
     void Subscribe(std::vector<std::string> symbols);
@@ -29,11 +20,10 @@ struct MdClient : CThostFtdcMdSpi {
     void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) override;
 
-    std::map<int, std::string> _err_map{};
-    MdConfig _config{};
+    // pImpl pattern
+    struct Impl;
+    std::unique_ptr<Impl> pImpl{};
+
     CThostFtdcMdApi *_mdapi{};
     std::binary_semaphore _sem{0};
-    // after invoked, dylib will unload the dll, so must set to field variable
-    // dylib doesn't have a default constructor, so use std::optional or std::unique_ptr
-    std::optional<dylib> _lib_md{};
 };

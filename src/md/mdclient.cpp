@@ -1,45 +1,40 @@
 #include "mdclient.h"
 
-#include <toml++/toml.h>
-
-#include <cstring>
 #include <dylib.hpp>
 #include <format>
-#include <map>
-#include <print>
-#include <string>
-#include <utils/parser.hpp>
-#include <utils/repr.hpp>
-#include <vector>
+#include <memory>
+#include <optional>
 
-MdConfig ReadConfig(std::string_view filename) {
-    auto config = toml::parse_file(filename);
-    std::string mode = config["default"]["mode"].value_or("openctp");
-    std::string platform = config["default"]["platform"].value_or("lin64");
-    std::string front_md = config[mode]["front_md"].value_or("");
-    std::string user_id = config[mode]["user_id"].value_or("");
-    return MdConfig{mode, platform, front_md, user_id};
+#include "../utils.hpp"
+
+struct MdClient::Impl {
+    CtpConfig cfg{};
+    // after invoked, dylib will unload the dll, so must set to field variable
+    // dylib doesn't have a default constructor, so use std::optional or std::unique_ptr
+    std::optional<dylib> lib{};
+};
+
+MdClient::MdClient(std::string_view cfg_file) : pImpl(std::make_unique<Impl>()) {
+    // read toml config
+    pImpl->cfg = read_config(cfg_file);
 }
 
+MdClient::~MdClient() { _mdapi->Release(); }
+
 void MdClient::Start() {
-    // read error mapping
-    _err_map = load_errors("errors.toml");
-
-    // read config
-    _config = ReadConfig("config.toml");
-
     // load dylib
-    auto dylib_path = std::format("{}/{}", _config.mode, _config.platform);
+    auto dylib_path = std::format("{}/{}", pImpl->cfg.mode, pImpl->cfg.platform);
     // inplace-construct the dylib inside the optional
-    _lib_md.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
-    auto GetApiVersion = _lib_md->get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
+    pImpl->lib.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
+
+    auto GetApiVersion = pImpl->lib->get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
     std::println("md_ver={}", GetApiVersion());
-    auto CreateFtdcMdApi = _lib_md->get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
+    auto CreateFtdcMdApi = pImpl->lib->get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
 
     // register
     _mdapi = CreateFtdcMdApi("", false, false);
     _mdapi->RegisterSpi(this);
-    _mdapi->RegisterFront(_config.front_md.data());
+    _mdapi->RegisterFront(pImpl->cfg.front_md.data());
 
     // connect
     _mdapi->Init();
@@ -47,7 +42,7 @@ void MdClient::Start() {
 
     // login
     CThostFtdcReqUserLoginField req{};
-    _config.user_id.copy(req.UserID, _config.user_id.length());
+    pImpl->cfg.user_id.copy(req.UserID, pImpl->cfg.user_id.length());
     _mdapi->ReqUserLogin(&req, 1);
     _sem.acquire();
 }
@@ -57,16 +52,8 @@ void MdClient::OnFrontConnected() {
     _sem.release();
 }
 
-std::map<int, std::string> DisconnectionMap{
-    {0x1001, "网络读失败"},
-    {0x1002, "网络写失败"},
-    {0x2001, "接收心跳超时"},
-    {0x2002, "发送心跳失败"},
-    {0x2003, "收到错误报文"},
-};
-
 void MdClient::OnFrontDisconnected(int nReason) {
-    std::println("OnFrontDisconnected: {}", DisconnectionMap[nReason]);
+    std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
 }
 
 void MdClient::OnHeartBeatWarning(int nTimeLapse) {
@@ -74,18 +61,9 @@ void MdClient::OnHeartBeatWarning(int nTimeLapse) {
 }
 
 void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspUserLogin, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
+    handle_resp(pRspUserLogin, pRspInfo);
 
-    if (pRspUserLogin) {
-        print_struct(pRspUserLogin);
-    }
-
-    if (bIsLast) {
-        _sem.release();
-    }
+    if (bIsLast) _sem.release();
 };
 
 void MdClient::Subscribe(std::vector<std::string> symbols) {
@@ -99,18 +77,9 @@ void MdClient::Subscribe(std::vector<std::string> symbols) {
 }
 
 void MdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspSubMarketData, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
+    handle_resp(pSpecificInstrument, pRspInfo);
 
-    if (pSpecificInstrument) {
-        print_struct(pSpecificInstrument);
-    }
-
-    if (bIsLast) {
-        _sem.release();
-    }
+    if (bIsLast) _sem.release();
 }
 
 void MdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
