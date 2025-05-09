@@ -12,6 +12,8 @@ struct TdClient : CThostFtdcTraderSpi {
     void ReqSettlementInfo();
     void QryInvestorPosition();
     void QryTradingAccount();
+    void OrderInsert();
+    void OrderAction();
 
    private:
     void OnFrontConnected() override;
@@ -22,6 +24,12 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+
+    void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+    void OnRtnOrder(CThostFtdcOrderField *pOrder) override;
+    void OnRtnTrade(CThostFtdcTradeField *pTrade) override;
+
+    void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
     // pImpl pattern
     struct Impl;

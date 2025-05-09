@@ -39,7 +39,6 @@ void TdClient::Start() {
 
     // auth
     CThostFtdcReqAuthenticateField auth_req{};
-    pImpl->cfg.broker_id.copy(auth_req.BrokerID, pImpl->cfg.broker_id.length());
     pImpl->cfg.user_id.copy(auth_req.UserID, pImpl->cfg.user_id.length());
     pImpl->cfg.auth_id.copy(auth_req.AppID, pImpl->cfg.auth_id.length());
     pImpl->cfg.auth_code.copy(auth_req.AuthCode, pImpl->cfg.auth_code.length());
@@ -112,6 +111,40 @@ void TdClient::QryTradingAccount() {
 
 void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pTradingAccount, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}
+
+// insert order
+void TdClient::OrderInsert() {
+    CThostFtdcInputOrderField req{};
+    // todo
+    _tdapi->ReqOrderInsert(&req, ++_reqId);
+}
+
+void TdClient::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    handle_resp(pInputOrder, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}
+
+void TdClient::OnRtnOrder(CThostFtdcOrderField *pOrder) {
+    print_struct(pOrder);
+}
+
+void TdClient::OnRtnTrade(CThostFtdcTradeField *pTrade) {
+    print_struct(pTrade);
+}
+
+// cancel order
+void TdClient::OrderAction() {
+    CThostFtdcInputOrderActionField req{};
+    // todo
+    _tdapi->ReqOrderAction(&req, ++_reqId);
+}
+
+void TdClient::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    handle_resp(pInputOrderAction, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
