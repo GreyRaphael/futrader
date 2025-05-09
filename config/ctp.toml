@@ -1,0 +1,13 @@
+[default]
+lib_dir = "ctp"
+# choose from ["lin64", "win64"]
+platform = "lin64"
+
+[user]
+front_md = "tcp://211.136.125.127:51213"
+front_td = "tcp://211.136.125.127:51205"
+auth_id = ""
+auth_code = ""
+broker_id = ""
+user_id = "your_id"
+password = "your_pwd"
