@@ -94,7 +94,7 @@ inline void handle_resp(T const *ptr, E const *pRspInfo) noexcept {
 
 // CtpConfig struct
 struct CtpConfig {
-    std::string mode;
+    std::string lib_dir;
     std::string platform;
     std::string front_td;
     std::string front_md;
@@ -108,18 +108,18 @@ struct CtpConfig {
 // read *.toml file to CtpConfig
 inline CtpConfig read_config(std::string_view file_name) {
     auto config = toml::parse_file(file_name);
-    std::string mode = config["default"]["mode"].value_or("openctp");
+    std::string lib_dir = config["default"]["lib_dir"].value_or("openctp");
     std::string platform = config["default"]["platform"].value_or("lin64");
-    std::string front_td = config[mode]["front_td"].value_or("");
-    std::string front_md = config[mode]["front_md"].value_or("");
-    std::string auth_id = config[mode]["auth_id"].value_or("");
-    std::string auth_code = config[mode]["auth_code"].value_or("");
-    std::string broker_id = config[mode]["broker_id"].value_or("");
-    std::string user_id = config[mode]["user_id"].value_or("");
-    std::string password = config[mode]["password"].value_or("");
+    std::string front_td = config["user"]["front_td"].value_or("");
+    std::string front_md = config["user"]["front_md"].value_or("");
+    std::string auth_id = config["user"]["auth_id"].value_or("");
+    std::string auth_code = config["user"]["auth_code"].value_or("");
+    std::string broker_id = config["user"]["broker_id"].value_or("");
+    std::string user_id = config["user"]["user_id"].value_or("");
+    std::string password = config["user"]["password"].value_or("");
 
     return CtpConfig{
-        mode,
+        lib_dir,
         platform,
         front_td,
         front_md,

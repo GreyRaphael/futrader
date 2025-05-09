@@ -21,7 +21,7 @@ TdClient::~TdClient() { _tdapi->Release(); }
 
 void TdClient::Start() {
     // load dylib
-    auto dylib_path = std::format("{}/{}", pImpl->cfg.mode, pImpl->cfg.platform);
+    auto dylib_path = std::format("{}/{}", pImpl->cfg.lib_dir, pImpl->cfg.platform);
     pImpl->lib.emplace(dylib_path, "thosttraderapi_se.so", dylib::no_filename_decorations);
 
     auto GetApiVersion = pImpl->lib->get_function<const char *()>("_ZN19CThostFtdcTraderApi13GetApiVersionEv");

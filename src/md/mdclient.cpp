@@ -23,7 +23,7 @@ MdClient::~MdClient() { _mdapi->Release(); }
 
 void MdClient::Start() {
     // load dylib
-    auto dylib_path = std::format("{}/{}", pImpl->cfg.mode, pImpl->cfg.platform);
+    auto dylib_path = std::format("{}/{}", pImpl->cfg.lib_dir, pImpl->cfg.platform);
     // inplace-construct the dylib inside the optional
     pImpl->lib.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
 
