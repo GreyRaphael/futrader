@@ -8,7 +8,7 @@ int main(int, char **) {
 
     TdClient td_cli{"openctp.toml"};
     td_cli.Start();
-    td_cli.ReqSettlementInfo();
+    td_cli.SettlementInfo();
     td_cli.QryTradingAccount();
     td_cli.QryInvestorPosition();
     getchar();

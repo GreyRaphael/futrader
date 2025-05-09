@@ -79,7 +79,7 @@ void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
     if (bIsLast) _sem.release();
 }
 
-void TdClient::ReqSettlementInfo() {
+void TdClient::SettlementInfo() {
     CThostFtdcSettlementInfoConfirmField req{};
     _tdapi->ReqSettlementInfoConfirm(&req, ++_reqId);
     _sem.acquire();
@@ -134,6 +134,26 @@ void TdClient::OnRtnOrder(CThostFtdcOrderField *pOrder) {
 
 void TdClient::OnRtnTrade(CThostFtdcTradeField *pTrade) {
     print_struct(pTrade);
+}
+
+void TdClient::Buy() {
+    // todo
+    this->OrderInsert();
+}
+
+void TdClient::Sell() {
+    // todo
+    this->OrderInsert();
+}
+
+void TdClient::SellShort() {
+    // todo
+    this->OrderInsert();
+}
+
+void TdClient::Buy2Cover() {
+    // todo
+    this->OrderInsert();
 }
 
 // cancel order

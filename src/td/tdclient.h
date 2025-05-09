@@ -9,11 +9,19 @@ struct TdClient : CThostFtdcTraderSpi {
     ~TdClient();
 
     void Start();
-    void ReqSettlementInfo();
+
+    void SettlementInfo();
     void QryInvestorPosition();
     void QryTradingAccount();
-    void OrderInsert();
     void OrderAction();
+
+    void Buy();
+    void Sell();
+    void SellShort();
+    void Buy2Cover();
+
+   private:
+    void OrderInsert();
 
    private:
     void OnFrontConnected() override;
