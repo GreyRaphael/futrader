@@ -23,8 +23,9 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
+    // pImpl pattern
     struct Impl;
-    std::unique_ptr<Impl> pImpl;
+    std::unique_ptr<Impl> pImpl{};
 
     CThostFtdcTraderApi *_tdapi{};
     std::binary_semaphore _sem{0};

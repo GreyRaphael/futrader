@@ -1,14 +1,9 @@
 #include "tdclient.h"
 
-#include <ThostFtdcTraderApi.h>
-#include <toml++/toml.h>
-
-#include <cstring>
 #include <dylib.hpp>
 #include <format>
 #include <memory>
 #include <optional>
-#include <print>
 
 #include "../utils.hpp"
 
@@ -66,7 +61,7 @@ void TdClient::OnFrontConnected() {
 }
 
 void TdClient::OnFrontDisconnected(int nReason) {
-    std::println("OnFrontDisconnected, reason={}", nReason);
+    std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
 }
 
 void TdClient::OnHeartBeatWarning(int nTimeLapse) {
