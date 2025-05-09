@@ -66,6 +66,14 @@ inline std::string_view get(int key) {
         return "no exist";
     }
 }
+
+inline const std::map<int, std::string> discon_errors{
+    {0x1001, "网络读失败"},
+    {0x1002, "网络写失败"},
+    {0x2001, "接收心跳超时"},
+    {0x2002, "发送心跳失败"},
+    {0x2003, "收到错误报文"},
+};
 }  // namespace errconfig
 
 // handle any kinds of reponse
