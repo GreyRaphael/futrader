@@ -9,6 +9,22 @@
 #include <utils/parser.hpp>
 #include <utils/repr.hpp>
 
+#include "../config.hpp"
+
+template <typename T>
+void handle_resp(T const *ptr, CThostFtdcRspInfoField const *pRspInfo) noexcept {
+    auto name = ylt::reflection::get_struct_name<T>();
+    if (pRspInfo) {
+        std::println("{}, {}", errconfig::get(pRspInfo->ErrorID), name);
+    }
+
+    if (ptr) {
+        print_struct(ptr);
+    } else {
+        std::println("nothing in {}", name);
+    }
+}
+
 TdConfig ReadConfig(std::string_view filename) {
     auto config = toml::parse_file(filename);
     std::string mode = config["default"]["mode"].value_or("openctp");
@@ -32,14 +48,11 @@ TdConfig ReadConfig(std::string_view filename) {
 }
 
 void TdClient::Start() {
-    // read error mapping
-    _err_map = load_errors("errors.toml");
-
     // read config
-    _config = ReadConfig("config.toml");
+    // ctpconfig::cfg = ReadConfig("config.toml");
 
     // load dylib
-    auto dylib_path = std::format("{}/{}", _config.mode, _config.platform);
+    auto dylib_path = std::format("{}/{}", ctpconfig::cfg.mode, ctpconfig::cfg.platform);
     _lib_td.emplace(dylib_path, "thosttraderapi_se.so", dylib::no_filename_decorations);
     auto GetApiVersion = _lib_td->get_function<const char *()>("_ZN19CThostFtdcTraderApi13GetApiVersionEv");
     std::println("td_ver={}", GetApiVersion());
@@ -48,7 +61,7 @@ void TdClient::Start() {
     // register
     _tdapi = CreateFtdcTraderApi("");
     _tdapi->RegisterSpi(this);
-    _tdapi->RegisterFront(_config.front_td.data());
+    _tdapi->RegisterFront(const_cast<char *>(ctpconfig::cfg.front_td.data()));
 
     // connect
     _tdapi->Init();
@@ -56,18 +69,18 @@ void TdClient::Start() {
 
     // auth
     CThostFtdcReqAuthenticateField auth_req{};
-    _config.broker_id.copy(auth_req.BrokerID, _config.broker_id.length());
-    _config.user_id.copy(auth_req.UserID, _config.user_id.length());
-    _config.auth_id.copy(auth_req.AppID, _config.auth_id.length());
-    _config.auth_code.copy(auth_req.AuthCode, _config.auth_code.length());
+    ctpconfig::cfg.broker_id.copy(auth_req.BrokerID, ctpconfig::cfg.broker_id.length());
+    ctpconfig::cfg.user_id.copy(auth_req.UserID, ctpconfig::cfg.user_id.length());
+    ctpconfig::cfg.auth_id.copy(auth_req.AppID, ctpconfig::cfg.auth_id.length());
+    ctpconfig::cfg.auth_code.copy(auth_req.AuthCode, ctpconfig::cfg.auth_code.length());
     _tdapi->ReqAuthenticate(&auth_req, ++_reqId);
     _sem.acquire();
 
     // login
     CThostFtdcReqUserLoginField login_req{};
-    _config.broker_id.copy(login_req.BrokerID, _config.broker_id.length());
-    _config.user_id.copy(login_req.UserID, _config.user_id.length());
-    _config.password.copy(login_req.Password, _config.password.length());
+    ctpconfig::cfg.broker_id.copy(login_req.BrokerID, ctpconfig::cfg.broker_id.length());
+    ctpconfig::cfg.user_id.copy(login_req.UserID, ctpconfig::cfg.user_id.length());
+    ctpconfig::cfg.password.copy(login_req.Password, ctpconfig::cfg.password.length());
     _tdapi->ReqUserLogin(&login_req, ++_reqId);
     _sem.acquire();
 }
@@ -86,14 +99,7 @@ void TdClient::OnHeartBeatWarning(int nTimeLapse) {
 }
 
 void TdClient::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspAuthenticate, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
-
-    if (pRspAuthenticateField) {
-        print_struct(pRspAuthenticateField);
-    }
+    handle_resp(pRspAuthenticateField, pRspInfo);
 
     if (bIsLast) {
         _sem.release();
@@ -101,14 +107,7 @@ void TdClient::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticat
 }
 
 void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspUserLogin, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
-
-    if (pRspUserLogin) {
-        print_struct(pRspUserLogin);
-    }
+    handle_resp(pRspUserLogin, pRspInfo);
 
     if (bIsLast) {
         _sem.release();
@@ -117,21 +116,14 @@ void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
 
 void TdClient::ReqSettlementInfo() {
     CThostFtdcSettlementInfoConfirmField req{};
-    // _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
-    // _config.user_id.copy(req.InvestorID, _config.user_id.length());
+    // ctpconfig::cfg.broker_id.copy(req.BrokerID, ctpconfig::cfg.broker_id.length());
+    // ctpconfig::cfg.user_id.copy(req.InvestorID, ctpconfig::cfg.user_id.length());
     _tdapi->ReqSettlementInfoConfirm(&req, ++_reqId);
     _sem.acquire();
 }
 
 void TdClient::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspSettlementInfoConfirm, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
-
-    if (pSettlementInfoConfirm) {
-        print_struct(pSettlementInfoConfirm);
-    }
+    handle_resp(pSettlementInfoConfirm, pRspInfo);
 
     if (bIsLast) {
         _sem.release();
@@ -145,16 +137,7 @@ void TdClient::QryInvestorPosition() {
 }
 
 void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspQryInvestorPosition, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
-
-    if (pInvestorPosition) {
-        print_struct(pInvestorPosition);
-    } else {
-        std::println("hold nothing");
-    }
+    handle_resp(pInvestorPosition, pRspInfo);
 
     if (bIsLast) {
         _sem.release();
@@ -163,21 +146,14 @@ void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvest
 
 void TdClient::QryTradingAccount() {
     CThostFtdcQryTradingAccountField req{};
-    // _config.broker_id.copy(req.BrokerID, _config.broker_id.length());
-    // _config.user_id.copy(req.InvestorID, _config.user_id.length());
+    // ctpconfig::cfg.broker_id.copy(req.BrokerID, ctpconfig::cfg.broker_id.length());
+    // ctpconfig::cfg.user_id.copy(req.InvestorID, ctpconfig::cfg.user_id.length());
     auto ret = _tdapi->ReqQryTradingAccount(&req, ++_reqId);
     _sem.acquire();
 }
 
 void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    if (0 != pRspInfo->ErrorID) {
-        std::println("OnRspQryTradingAccount, {}", _err_map[pRspInfo->ErrorID]);
-        return;
-    }
-
-    if (pTradingAccount) {
-        print_struct(pTradingAccount);
-    }
+    handle_resp(pTradingAccount, pRspInfo);
 
     if (bIsLast) {
         _sem.release();
