@@ -118,16 +118,14 @@ void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAcc
 }
 
 // insert order
-void TdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, char price_type = 'L') {
+void TdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, bool is_stop = false) {
     CThostFtdcInputOrderField req{};
     req.Direction = direction;
     req.CombOffsetFlag[0] = offset;
     req.VolumeTotalOriginal = lot;
-    if ('S' == price_type) {
-        // stop order
+    if (is_stop) {
         req.StopPrice = price;
-    } else if ('L' == price_type) {
-        // limit order
+    } else {
         req.LimitPrice = price;
     }
     // todo

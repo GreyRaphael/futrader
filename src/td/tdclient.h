@@ -21,7 +21,7 @@ struct TdClient : CThostFtdcTraderSpi {
     bool Buy2Cover(std::string_view symbol, int lot, double price);
 
    private:
-    void OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, char price_type);
+    void OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, bool is_stop);
 
    private:
     void OnFrontConnected() override;
