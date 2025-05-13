@@ -2,7 +2,6 @@
   "dependencies": [
     "dylib",
     "fmt",
-    "nanobind",
     "tomlplusplus",
     "frozen"
   ]
