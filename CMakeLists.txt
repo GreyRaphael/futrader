@@ -18,6 +18,9 @@ set_target_properties(duckdb PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/duckdb/lin64"
 )
 
+add_library(datareader src/datafeed/reader.cpp)
+target_link_libraries(datareader PRIVATE duckdb)
+
 add_library(mdclient src/md/mdclient.cpp)
 target_include_directories(mdclient PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ctp/lin64)
 target_link_libraries(mdclient PRIVATE frozen::frozen frozen::frozen-headers)
@@ -38,4 +41,3 @@ target_include_directories(futrader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/md)
 target_include_directories(futrader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/td)
 target_link_libraries(futrader PRIVATE mdclient)
 target_link_libraries(futrader PRIVATE tdclient)
-target_link_libraries(futrader PRIVATE duckdb)
