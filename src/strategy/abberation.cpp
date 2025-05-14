@@ -1,8 +1,9 @@
 #include "abberation.h"
 
 #include <algorithm>
+#include <memory>
 
-#include "../rolling/mean.hpp"
+#include "../operators/rolling.hpp"
 
 const char* Abberation::name() {
     return "Abberation";
@@ -10,5 +11,5 @@ const char* Abberation::name() {
 
 void Abberation::on_bar(Bar const& bar) {
     auto dyn_length = std::clamp(base_length, 20, 70);
-    rolling::Mean meaner{};
+    auto meaner = rolling::Meaner(dyn_length);
 }

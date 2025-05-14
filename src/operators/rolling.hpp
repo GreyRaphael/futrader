@@ -1,24 +1,17 @@
 #pragma once
 
-#include <array>
 #include <cmath>
 #include <cstddef>
+#include <vector>
 
 namespace rolling {
 
 inline bool nan_or_inf(std::floating_point auto x) { return x - x != 0; }
 
-// make NAN array in compile-time
-template <size_t N>
-constexpr std::array<double, N> make_nan_array() {
-    std::array<double, N> arr{};
-    arr.fill(NAN);
-    return arr;
-}
-
-template <size_t N>
 struct Container {
-    std::array<double, N> buf = make_nan_array<N>();
+    Container(size_t n) : buf(n, NAN) {}
+
+    std::vector<double> buf;
     size_t head_idx{0};
     size_t tail_idx{0};
 
@@ -33,10 +26,10 @@ struct Container {
     }
 };
 
-template <size_t N>
 struct Sumer {
-    Container<N> container{};
-    size_t nan_count{N};
+    Sumer(size_t n) : container(n), nan_count(n) {}
+    Container container;
+    size_t nan_count;
     double sum{0};
 
     double update(double new_val) {
@@ -59,41 +52,44 @@ struct Sumer {
     }
 };
 
-template <size_t N>
 struct Meaner {
-    Sumer<N> sumer{};
+    Meaner(size_t n) : sumer(n) {}
+    Sumer sumer;
 
     double update(double new_val) {
         return sumer.update(new_val) / sumer.container.len();
     }
 };
 
-template <size_t N>
 struct Stder {
-    Sumer<N> sumer{};
-    Sumer<N> sq_sumer{};
+    Stder(size_t n) : sumer(n), sq_sumer(n), num(n) {}
+    Sumer sumer;
+    Sumer sq_sumer;
+    size_t num;
 
     double update(double new_val) {
         auto sum = sumer.update(new_val);
         auto sq_sum = sq_sumer.update(new_val * new_val);
-        auto variance = (sq_sum - sum * sum / N) / (N - 1);
+        auto variance = (sq_sum - sum * sum / num) / (num - 1);
         return sqrt(variance);
     }
 };
 
-template <size_t N>
 struct Skewer {
-    Meaner<N> meaner{};
-    Sumer<N> sq_sumer{};
-    Sumer<N> cb_sumer{};
+    Skewer(size_t n) : meaner(n), sq_sumer(n), cb_sumer(n), num(n) {}
+
+    Meaner meaner;
+    Sumer sq_sumer;
+    Sumer cb_sumer;
+    size_t num;
 
     double update(double new_val) {
         auto mean = meaner.update(new_val);
         auto sq_sum = sq_sumer.update(new_val * new_val);
         auto cb_sum = cb_sumer.update(new_val * new_val * new_val);
-        auto variance = sq_sum / N - mean * mean;
+        auto variance = sq_sum / num - mean * mean;
 
-        return (cb_sum / N - 3.0 * mean * variance - mean * mean * mean) / std::pow(variance, 1.5);
+        return (cb_sum / num - 3.0 * mean * variance - mean * mean * mean) / std::pow(variance, 1.5);
     }
 };
 
