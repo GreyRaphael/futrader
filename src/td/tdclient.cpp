@@ -202,3 +202,14 @@ void TdClient::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThost
 
     if (bIsLast) _sem.release();
 }
+
+void TdClient::QryExchange() {
+    CThostFtdcQryExchangeField req{};
+    _tdapi->ReqQryExchange(&req, ++_reqId);
+}
+
+void TdClient::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    handle_resp(pExchange, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}

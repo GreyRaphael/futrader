@@ -16,6 +16,7 @@ struct TdClient : CThostFtdcTraderSpi {
     void QryTradingAccount();
     void OrderAction();
     void QryInstrument(std::vector<std::string> exchange_ids);
+    void QryExchange();
 
     bool Buy(std::string_view symbol, int lot, double price);
     bool Sell(std::string_view symbol, int lot, double price);
@@ -43,6 +44,7 @@ struct TdClient : CThostFtdcTraderSpi {
 
     // query
     void OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+    void OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     // pImpl pattern
     struct Impl;
     std::unique_ptr<Impl> pImpl{};
