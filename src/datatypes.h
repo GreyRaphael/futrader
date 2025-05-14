@@ -3,8 +3,8 @@
 #include <cstdint>
 
 struct Bar {
-    std::int64_t dt_start;
-    std::int64_t dt_end;
+    int64_t dt_start;
+    int64_t dt_end;
     double open;
     double high;
     double low;
@@ -15,7 +15,7 @@ struct Bar {
 };
 
 struct Tick {
-    std::int64_t dt;
+    int64_t dt;
     double open;
     double last;
     double volume;
