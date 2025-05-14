@@ -3,6 +3,7 @@
 #include <memory>
 #include <semaphore>
 #include <string_view>
+#include <vector>
 
 struct TdClient : CThostFtdcTraderSpi {
     TdClient(std::string_view cfg_file);
@@ -14,6 +15,7 @@ struct TdClient : CThostFtdcTraderSpi {
     void QryInvestorPosition();
     void QryTradingAccount();
     void OrderAction();
+    void QryInstrument(std::string exchange_ids);
 
     bool Buy(std::string_view symbol, int lot, double price);
     bool Sell(std::string_view symbol, int lot, double price);
@@ -39,6 +41,8 @@ struct TdClient : CThostFtdcTraderSpi {
 
     void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
+    // query
+    void OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     // pImpl pattern
     struct Impl;
     std::unique_ptr<Impl> pImpl{};

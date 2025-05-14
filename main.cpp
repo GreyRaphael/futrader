@@ -14,12 +14,14 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    MdClient md_cli{argv[1]};
-    md_cli.Start();
-    md_cli.Subscribe({"MA505", "rb2507"});
+    // MdClient md_cli{argv[1]};
+    // md_cli.Start();
+    // md_cli.Subscribe({"MA505", "rb2507"});
 
-    // TdClient td_cli{argv[1]};
-    // td_cli.Start();
+    TdClient td_cli{argv[1]};
+    td_cli.Start();
+    // S Z D J N
+    td_cli.QryInstrument("SZDJN");
     // td_cli.SettlementInfo();
     // td_cli.QryTradingAccount();
     // td_cli.QryInvestorPosition();

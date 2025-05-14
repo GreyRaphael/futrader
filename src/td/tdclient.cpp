@@ -4,6 +4,7 @@
 #include <format>
 #include <memory>
 #include <optional>
+#include <string>
 #include <string_view>
 
 #include "../utils.hpp"
@@ -175,6 +176,20 @@ void TdClient::OrderAction() {
 
 void TdClient::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInputOrderAction, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}
+
+void TdClient::QryInstrument(std::string exchange_ids) {
+    CThostFtdcQryInstrumentField req{};
+    // exchange_ids.copy(req.ExchangeID, exchange_ids.length());
+    req.ExchangeID[0] = THOST_FTDC_EIDT_SHFE;
+    // 获取对应交易所全部合约列表
+    _tdapi->ReqQryInstrument(&req, ++_reqId);
+}
+
+void TdClient::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    handle_resp(pInstrument, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
