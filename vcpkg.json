@@ -1,7 +1,6 @@
 {
   "dependencies": [
     "dylib",
-    "fmt",
     "tomlplusplus",
     "frozen"
   ]
