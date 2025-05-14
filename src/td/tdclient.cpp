@@ -224,3 +224,25 @@ void TdClient::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspIn
 
     if (bIsLast) _sem.release();
 }
+
+void TdClient::QryInstrumentCommissionRate() {
+    CThostFtdcQryInstrumentCommissionRateField req{};
+    _tdapi->ReqQryInstrumentCommissionRate(&req, ++_reqId);
+}
+
+void TdClient::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    handle_resp(pInstrumentCommissionRate, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}
+
+void TdClient::QryInstrumentOrderCommRate() {
+    CThostFtdcQryInstrumentOrderCommRateField req{};
+    _tdapi->ReqQryInstrumentOrderCommRate(&req, ++_reqId);
+}
+
+void TdClient::OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    handle_resp(pInstrumentOrderCommRate, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}

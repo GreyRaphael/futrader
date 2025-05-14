@@ -24,7 +24,9 @@ int main(int argc, char** argv) {
     // td_cli.QryInstrument({"SHFE", "INE", "CZCE"});
     // td_cli.QryInstrument({});
     // td_cli.QryExchange();
-    td_cli.QryProduct();
+    // td_cli.QryProduct();
+    td_cli.QryInstrumentCommissionRate();
+    // td_cli.QryInstrumentOrderCommRate();
     // td_cli.SettlementInfo();
     // td_cli.QryTradingAccount();
     // td_cli.QryInvestorPosition();

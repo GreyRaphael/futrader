@@ -18,6 +18,8 @@ struct TdClient : CThostFtdcTraderSpi {
     void QryInstrument(std::vector<std::string> exchange_ids);
     void QryExchange();
     void QryProduct();
+    void QryInstrumentCommissionRate();
+    void QryInstrumentOrderCommRate();
 
     bool Buy(std::string_view symbol, int lot, double price);
     bool Sell(std::string_view symbol, int lot, double price);
@@ -47,6 +49,8 @@ struct TdClient : CThostFtdcTraderSpi {
     void OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+    void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+    void OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
     // pImpl pattern
     struct Impl;
