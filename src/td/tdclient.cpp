@@ -42,6 +42,7 @@ void TdClient::Start() {
 
     // auth
     CThostFtdcReqAuthenticateField auth_req{};
+    pImpl->cfg.broker_id.copy(auth_req.BrokerID, pImpl->cfg.broker_id.length());
     pImpl->cfg.user_id.copy(auth_req.UserID, pImpl->cfg.user_id.length());
     pImpl->cfg.auth_id.copy(auth_req.AppID, pImpl->cfg.auth_id.length());
     pImpl->cfg.auth_code.copy(auth_req.AuthCode, pImpl->cfg.auth_code.length());
