@@ -15,7 +15,7 @@ struct TdClient : CThostFtdcTraderSpi {
     void QryInvestorPosition();
     void QryTradingAccount();
     void OrderAction();
-    void QryInstrument(std::string exchange_ids);
+    void QryInstrument(std::vector<std::string> exchange_ids);
 
     bool Buy(std::string_view symbol, int lot, double price);
     bool Sell(std::string_view symbol, int lot, double price);

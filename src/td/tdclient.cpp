@@ -1,5 +1,6 @@
 #include "tdclient.h"
 
+#include <cstring>
 #include <dylib.hpp>
 #include <format>
 #include <memory>
@@ -181,12 +182,19 @@ void TdClient::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderActi
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryInstrument(std::string exchange_ids) {
-    CThostFtdcQryInstrumentField req{};
-    // exchange_ids.copy(req.ExchangeID, exchange_ids.length());
-    req.ExchangeID[0] = THOST_FTDC_EIDT_SHFE;
-    // 获取对应交易所全部合约列表
-    _tdapi->ReqQryInstrument(&req, ++_reqId);
+void TdClient::QryInstrument(std::vector<std::string> exchange_ids) {
+    if (exchange_ids.empty()) {
+        CThostFtdcQryInstrumentField req{};
+        // 获取所有交易所全部合约列表
+        _tdapi->ReqQryInstrument(&req, ++_reqId);
+    } else {
+        for (auto &&e : exchange_ids) {
+            CThostFtdcQryInstrumentField req{};
+            e.copy(req.ExchangeID, e.length());
+            // 获取对应交易所全部合约列表
+            _tdapi->ReqQryInstrument(&req, ++_reqId);
+        }
+    }
 }
 
 void TdClient::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
