@@ -23,7 +23,8 @@ int main(int argc, char** argv) {
     // S Z D J N
     // td_cli.QryInstrument({"SHFE", "INE", "CZCE"});
     // td_cli.QryInstrument({});
-    td_cli.QryExchange();
+    // td_cli.QryExchange();
+    td_cli.QryProduct();
     // td_cli.SettlementInfo();
     // td_cli.QryTradingAccount();
     // td_cli.QryInvestorPosition();
