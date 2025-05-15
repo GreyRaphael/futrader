@@ -1,4 +1,4 @@
-add_library(parser config_parser.cc)
+add_library(parser config_parser.cpp)
 
 target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party)
 target_include_directories(parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
