@@ -14,36 +14,37 @@ struct MdClient::Impl {
     std::optional<dylib> lib{};
 };
 
-MdClient::MdClient(std::string_view cfg_file) : pImpl(std::make_unique<Impl>()) {
+MdClient::MdClient(std::string_view cfg_filename, MarketDataQueuePtr queue_ptr)
+    : _pimpl(std::make_unique<Impl>()), _queue_ptr(queue_ptr) {
     // read toml config
-    pImpl->cfg = read_config(cfg_file);
+    _pimpl->cfg = read_config(cfg_filename);
 }
 
-MdClient::~MdClient() { _mdapi->Release(); }
+MdClient::~MdClient() { _api->Release(); }
 
 void MdClient::Start() {
     // load dylib
-    auto dylib_path = std::format("{}/{}", pImpl->cfg.lib_dir, pImpl->cfg.platform);
+    auto dylib_path = std::format("{}/{}", _pimpl->cfg.lib_dir, _pimpl->cfg.platform);
     // inplace-construct the dylib inside the optional
-    pImpl->lib.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
+    _pimpl->lib.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
 
-    auto GetApiVersion = pImpl->lib->get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
+    auto GetApiVersion = _pimpl->lib->get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
     std::println("md_ver={}", GetApiVersion());
-    auto CreateFtdcMdApi = pImpl->lib->get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
+    auto CreateFtdcMdApi = _pimpl->lib->get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
 
     // register
-    _mdapi = CreateFtdcMdApi("", false, false);
-    _mdapi->RegisterSpi(this);
-    _mdapi->RegisterFront(pImpl->cfg.front_md.data());
+    _api = CreateFtdcMdApi("", false, false);
+    _api->RegisterSpi(this);
+    _api->RegisterFront(_pimpl->cfg.front_md.data());
 
     // connect
-    _mdapi->Init();
+    _api->Init();
     _sem.acquire();
 
     // login
     CThostFtdcReqUserLoginField req{};
-    pImpl->cfg.user_id.copy(req.UserID, pImpl->cfg.user_id.length());
-    _mdapi->ReqUserLogin(&req, 1);
+    _pimpl->cfg.user_id.copy(req.UserID, _pimpl->cfg.user_id.length());
+    _api->ReqUserLogin(&req, 1);
     _sem.acquire();
 }
 
@@ -67,12 +68,12 @@ void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThost
 };
 
 void MdClient::Subscribe(std::vector<std::string> symbols) {
-    std::vector<char *> symbol_pointers;
-    symbol_pointers.reserve(64);
+    std::vector<char *> symbol_ptrs;
+    symbol_ptrs.reserve(256);
     for (auto &e : symbols) {
-        symbol_pointers.push_back(e.data());
+        symbol_ptrs.push_back(e.data());
     }
-    _mdapi->SubscribeMarketData(symbol_pointers.data(), symbol_pointers.size());
+    _api->SubscribeMarketData(symbol_ptrs.data(), symbol_ptrs.size());
     _sem.acquire();
 }
 
@@ -83,5 +84,6 @@ void MdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificIn
 }
 
 void MdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
-    print_struct(pDepthMarketData);
+    // print_struct(pDepthMarketData);
+    _queue_ptr->push(*pDepthMarketData);
 }
