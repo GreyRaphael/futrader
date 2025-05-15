@@ -1,29 +1,30 @@
-#include "tdclient.h"
+#include "ctp_td.h"
+
+#include <config_parser.h>
 
 #include <cstring>
 #include <dylib.hpp>
+#include <error_parser.hpp>
 #include <format>
 #include <memory>
 #include <optional>
+#include <print>
 #include <string>
 #include <string_view>
 
-#include "../common/config.hpp"
-#include "ThostFtdcUserApiDataType.h"
-
-struct TdClient::Impl {
+struct CtpTdClient::Impl {
     CtpConfig cfg{};
     std::optional<dylib> lib{};
 };
 
-TdClient::TdClient(std::string_view cfg_file) : pImpl(std::make_unique<Impl>()) {
+CtpTdClient::CtpTdClient(std::string_view cfg_file) : pImpl(std::make_unique<Impl>()) {
     // read toml config
-    pImpl->cfg = read_config(cfg_file);
+    pImpl->cfg = CtpConfig::read_config(cfg_file);
 }
 
-TdClient::~TdClient() { _tdapi->Release(); }
+CtpTdClient::~CtpTdClient() { _tdapi->Release(); }
 
-void TdClient::Start() {
+void CtpTdClient::Start() {
     // load dylib
     auto dylib_path = std::format("{}/{}", pImpl->cfg.lib_dir, pImpl->cfg.platform);
     pImpl->lib.emplace(dylib_path, "thosttraderapi_se.so", dylib::no_filename_decorations);
@@ -59,69 +60,69 @@ void TdClient::Start() {
     _sem.acquire();
 }
 
-void TdClient::OnFrontConnected() {
+void CtpTdClient::OnFrontConnected() {
     std::println("OnFrontConnected");
     _sem.release();
 }
 
-void TdClient::OnFrontDisconnected(int nReason) {
+void CtpTdClient::OnFrontDisconnected(int nReason) {
     std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
 }
 
-void TdClient::OnHeartBeatWarning(int nTimeLapse) {
+void CtpTdClient::OnHeartBeatWarning(int nTimeLapse) {
     std::println("OnHeartBeatWarning, time={}", nTimeLapse);
 }
 
-void TdClient::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pRspAuthenticateField, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pRspUserLogin, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::SettlementInfo() {
+void CtpTdClient::SettlementInfo() {
     CThostFtdcSettlementInfoConfirmField req{};
     _tdapi->ReqSettlementInfoConfirm(&req, ++_reqId);
     _sem.acquire();
 }
 
-void TdClient::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pSettlementInfoConfirm, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryInvestorPosition() {
+void CtpTdClient::QryInvestorPosition() {
     CThostFtdcQryInvestorPositionField req{};
     _tdapi->ReqQryInvestorPosition(&req, ++_reqId);
     _sem.acquire();
 }
 
-void TdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInvestorPosition, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryTradingAccount() {
+void CtpTdClient::QryTradingAccount() {
     CThostFtdcQryTradingAccountField req{};
     _tdapi->ReqQryTradingAccount(&req, ++_reqId);
     _sem.acquire();
 }
 
-void TdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pTradingAccount, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
 // insert order
-void TdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, bool is_stop = false) {
+void CtpTdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, bool is_stop = false) {
     CThostFtdcInputOrderField req{};
     req.Direction = direction;
     req.CombOffsetFlag[0] = offset;
@@ -135,54 +136,54 @@ void TdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType dire
     _tdapi->ReqOrderInsert(&req, ++_reqId);
 }
 
-void TdClient::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInputOrder, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::OnRtnOrder(CThostFtdcOrderField *pOrder) {
+void CtpTdClient::OnRtnOrder(CThostFtdcOrderField *pOrder) {
     print_struct(pOrder);
 }
 
-void TdClient::OnRtnTrade(CThostFtdcTradeField *pTrade) {
+void CtpTdClient::OnRtnTrade(CThostFtdcTradeField *pTrade) {
     print_struct(pTrade);
 }
 
-bool TdClient::Buy(std::string_view symbol, int lot, double price) {
+bool CtpTdClient::Buy(std::string_view symbol, int lot, double price) {
     // todo
     this->OrderInsert(symbol, THOST_FTDC_D_Buy, THOST_FTDC_OF_Open, price, lot);
 }
 
-bool TdClient::Sell(std::string_view symbol, int lot, double price) {
+bool CtpTdClient::Sell(std::string_view symbol, int lot, double price) {
     // todo
     this->OrderInsert(symbol, THOST_FTDC_D_Sell, THOST_FTDC_OF_Close, price, lot);
 }
 
-bool TdClient::SellShort(std::string_view symbol, int lot, double price) {
+bool CtpTdClient::SellShort(std::string_view symbol, int lot, double price) {
     // todo
     this->OrderInsert(symbol, THOST_FTDC_D_Sell, THOST_FTDC_OF_Open, price, lot);
 }
 
-bool TdClient::Buy2Cover(std::string_view symbol, int lot, double price) {
+bool CtpTdClient::Buy2Cover(std::string_view symbol, int lot, double price) {
     // todo
     this->OrderInsert(symbol, THOST_FTDC_D_Buy, THOST_FTDC_OF_Close, price, lot);
 }
 
 // cancel order
-void TdClient::OrderAction() {
+void CtpTdClient::OrderAction() {
     CThostFtdcInputOrderActionField req{};
     // todo
     _tdapi->ReqOrderAction(&req, ++_reqId);
 }
 
-void TdClient::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInputOrderAction, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryInstrument(std::vector<std::string> exchange_ids) {
+void CtpTdClient::QryInstrument(std::vector<std::string> exchange_ids) {
     if (exchange_ids.empty()) {
         CThostFtdcQryInstrumentField req{};
         // 获取所有交易所全部合约列表
@@ -197,51 +198,51 @@ void TdClient::QryInstrument(std::vector<std::string> exchange_ids) {
     }
 }
 
-void TdClient::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInstrument, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryExchange() {
+void CtpTdClient::QryExchange() {
     CThostFtdcQryExchangeField req{};
     _tdapi->ReqQryExchange(&req, ++_reqId);
 }
 
-void TdClient::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pExchange, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryProduct() {
+void CtpTdClient::QryProduct() {
     CThostFtdcQryProductField req{};
     _tdapi->ReqQryProduct(&req, ++_reqId);
 }
 
-void TdClient::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pProduct, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryInstrumentCommissionRate() {
+void CtpTdClient::QryInstrumentCommissionRate() {
     CThostFtdcQryInstrumentCommissionRateField req{};
     _tdapi->ReqQryInstrumentCommissionRate(&req, ++_reqId);
 }
 
-void TdClient::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInstrumentCommissionRate, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void TdClient::QryInstrumentOrderCommRate() {
+void CtpTdClient::QryInstrumentOrderCommRate() {
     CThostFtdcQryInstrumentOrderCommRateField req{};
     _tdapi->ReqQryInstrumentOrderCommRate(&req, ++_reqId);
 }
 
-void TdClient::OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpTdClient::OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInstrumentOrderCommRate, pRspInfo);
 
     if (bIsLast) _sem.release();

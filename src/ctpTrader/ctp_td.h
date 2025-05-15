@@ -5,9 +5,9 @@
 #include <string_view>
 #include <vector>
 
-struct TdClient : CThostFtdcTraderSpi {
-    TdClient(std::string_view cfg_file);
-    ~TdClient();
+struct CtpTdClient : CThostFtdcTraderSpi {
+    CtpTdClient(std::string_view cfg_file);
+    ~CtpTdClient();
 
     void Start();
 
