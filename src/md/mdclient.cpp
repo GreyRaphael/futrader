@@ -14,8 +14,8 @@ struct MdClient::Impl {
     std::optional<dylib> lib{};
 };
 
-MdClient::MdClient(std::string_view cfg_filename, MarketDataQueuePtr queue_ptr)
-    : _pimpl(std::make_unique<Impl>()), _queue_ptr(queue_ptr) {
+MdClient::MdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr)
+    : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
     // read toml config
     _pimpl->cfg = read_config(cfg_filename);
 }
@@ -85,5 +85,5 @@ void MdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificIn
 
 void MdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
     // print_struct(pDepthMarketData);
-    _queue_ptr->push(*pDepthMarketData);
+    _channel_ptr->push(*pDepthMarketData);
 }

@@ -6,11 +6,11 @@
 #include <utils/spsc.hpp>
 #include <vector>
 
-using MarketDataQueue = lockfree::SPSC<CThostFtdcDepthMarketDataField, 1024>;
-using MarketDataQueuePtr = std::shared_ptr<MarketDataQueue>;
+using MarketDataChannel = lockfree::SPSC<CThostFtdcDepthMarketDataField, 1024>;
+using MarketDataChannelPtr = std::shared_ptr<MarketDataChannel>;
 
 struct MdClient : CThostFtdcMdSpi {
-    MdClient(std::string_view cfg_filename, MarketDataQueuePtr queue_ptr);
+    MdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr);
     ~MdClient();
 
     void Start();
@@ -30,5 +30,5 @@ struct MdClient : CThostFtdcMdSpi {
 
     CThostFtdcMdApi *_api{};
     std::binary_semaphore _sem{0};
-    MarketDataQueuePtr _queue_ptr;
+    MarketDataChannelPtr _channel_ptr;
 };
