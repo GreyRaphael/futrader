@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../quote.h"
+#include "../datatypes.h"
 
-struct Abberation {
+struct Aberation {
     const char* name();
     void on_bar(Bar const& bar);
 
