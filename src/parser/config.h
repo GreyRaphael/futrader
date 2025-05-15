@@ -14,3 +14,11 @@ struct CtpConfig {
 
     static CtpConfig read_config(std::string_view filename);
 };
+
+struct BtConfig {
+    std::string dt_start{};
+    std::string dt_end{};
+    std::string interval{};
+
+    static BtConfig read_config(std::string_view filename);
+};

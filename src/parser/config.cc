@@ -26,3 +26,8 @@ CtpConfig CtpConfig::read_config(std::string_view filename) {
         password,
     };
 }
+
+BtConfig BtConfig::read_config(std::string_view filename) {
+    // todo
+    return BtConfig{};
+}
