@@ -15,15 +15,16 @@ find_package(frozen CONFIG REQUIRED)
 
 add_library(duckdb SHARED IMPORTED)
 set_target_properties(duckdb PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_CURRENT_SOURCE_DIR}/third_party/duckdb/lin64/libduckdb.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/duckdb/lin64"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/duckdb/lin64/libduckdb.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/duckdb/lin64"
 )
 
 include(CTest)
-add_subdirectory(src/parser)
-add_subdirectory(src/operator)
-add_subdirectory(src/channel)
+# binary path is second param, so it go to build/parser
+add_subdirectory(src/parser parser)
+add_subdirectory(src/operator operator)
+add_subdirectory(src/channel channel)
 
-add_subdirectory(src/ctpMd)
-add_subdirectory(src/ctpTd)
-add_subdirectory(src/data)
+add_subdirectory(src/ctpMd ctpMd)
+add_subdirectory(src/ctpTd ctpTd)
+add_subdirectory(src/data data)
