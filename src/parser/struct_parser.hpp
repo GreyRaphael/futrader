@@ -1,8 +1,4 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "config.h"
-
-#include <doctest/doctest.h>
-
+#pragma once
 #include <print>
 #include <ylt/reflection/member_names.hpp>
 #include <ylt/reflection/member_value.hpp>
@@ -11,14 +7,9 @@
 template <typename T>
 inline void print_struct(T const *ptr) noexcept {
     auto name = ylt::reflection::get_struct_name<T>();
-    std::print("========> {}\n", name);
+    std::print("========> {}\n\t", name);
     ylt::reflection::for_each(*ptr, [](auto &field, auto name, auto index) {
-        std::println("\t{}:{}", name, field);
+        std::print("{}:{} | ", name, field);
     });
     std::println();
-}
-
-TEST_CASE("testing the factorial function") {
-    auto config = CtpConfig::read_config("openctp.toml");
-    print_struct(&config);
 }

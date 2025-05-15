@@ -3,8 +3,9 @@
 #include <memory>
 #include <semaphore>
 #include <string>
-#include <utils/spsc.hpp>
 #include <vector>
+
+#include "../common/spsc.hpp"
 
 using MarketDataChannel = lockfree::SPSC<CThostFtdcDepthMarketDataField, 1024>;
 using MarketDataChannelPtr = std::shared_ptr<MarketDataChannel>;

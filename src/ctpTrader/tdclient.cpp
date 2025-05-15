@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-#include "../utils.hpp"
+#include "../common/config.hpp"
 #include "ThostFtdcUserApiDataType.h"
 
 struct TdClient::Impl {
