@@ -1,4 +1,4 @@
-#include "reader.h"
+#include "duck_loader.h"
 
 #include <duckdb.h>
 
