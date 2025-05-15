@@ -1,28 +1,30 @@
-#include "mdclient.h"
+#include "ctp_md.h"
+
+#include <config_parser.h>
 
 #include <dylib.hpp>
+#include <error_parser.hpp>
 #include <format>
 #include <memory>
 #include <optional>
+#include <print>
 
-#include "../utils.hpp"
-
-struct MdClient::Impl {
+struct CtpMdClient::Impl {
     CtpConfig cfg{};
     // after invoked, dylib will unload the dll, so must set to field variable
     // dylib doesn't have a default constructor, so use std::optional or std::unique_ptr
     std::optional<dylib> lib{};
 };
 
-MdClient::MdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr)
+CtpMdClient::CtpMdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr)
     : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
     // read toml config
-    _pimpl->cfg = read_config(cfg_filename);
+    _pimpl->cfg = CtpConfig::read_config(cfg_filename);
 }
 
-MdClient::~MdClient() { _api->Release(); }
+CtpMdClient::~CtpMdClient() { _api->Release(); }
 
-void MdClient::Start() {
+void CtpMdClient::Start() {
     // load dylib
     auto dylib_path = std::format("{}/{}", _pimpl->cfg.lib_dir, _pimpl->cfg.platform);
     // inplace-construct the dylib inside the optional
@@ -48,26 +50,26 @@ void MdClient::Start() {
     _sem.acquire();
 }
 
-void MdClient::OnFrontConnected() {
+void CtpMdClient::OnFrontConnected() {
     std::println("OnFrontConnected");
     _sem.release();
 }
 
-void MdClient::OnFrontDisconnected(int nReason) {
+void CtpMdClient::OnFrontDisconnected(int nReason) {
     std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
 }
 
-void MdClient::OnHeartBeatWarning(int nTimeLapse) {
+void CtpMdClient::OnHeartBeatWarning(int nTimeLapse) {
     std::println("OnHeartBeatWarning: {}", nTimeLapse);
 }
 
-void MdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpMdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pRspUserLogin, pRspInfo);
 
     if (bIsLast) _sem.release();
 };
 
-void MdClient::Subscribe(std::vector<std::string> symbols) {
+void CtpMdClient::Subscribe(std::vector<std::string> symbols) {
     std::vector<char *> symbol_ptrs;
     symbol_ptrs.reserve(256);
     for (auto &e : symbols) {
@@ -77,13 +79,13 @@ void MdClient::Subscribe(std::vector<std::string> symbols) {
     _sem.acquire();
 }
 
-void MdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+void CtpMdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pSpecificInstrument, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void MdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
+void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
     // print_struct(pDepthMarketData);
-    _channel_ptr->push(*pDepthMarketData);
+    // _channel_ptr->push(*pDepthMarketData);
 }

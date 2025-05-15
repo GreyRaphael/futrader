@@ -2,17 +2,16 @@
 
 #include <memory>
 #include <semaphore>
+#include <spsc.hpp>
 #include <string>
 #include <vector>
-
-#include "../common/spsc.hpp"
 
 using MarketDataChannel = lockfree::SPSC<CThostFtdcDepthMarketDataField, 1024>;
 using MarketDataChannelPtr = std::shared_ptr<MarketDataChannel>;
 
-struct MdClient : CThostFtdcMdSpi {
-    MdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr);
-    ~MdClient();
+struct CtpMdClient : CThostFtdcMdSpi {
+    CtpMdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr);
+    ~CtpMdClient();
 
     void Start();
     void Subscribe(std::vector<std::string> symbols);
