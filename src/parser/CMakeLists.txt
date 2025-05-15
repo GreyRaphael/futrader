@@ -25,4 +25,11 @@ if(BUILD_TESTING)
     target_link_libraries(error_parser_test PRIVATE doctest::doctest)
 
     add_test(NAME error_parser_test COMMAND error_parser_test)
+
+    # test struct_parser.hpp
+    add_executable(struct_parser_test struct_parser_test.cc)
+    target_link_libraries(struct_parser_test PRIVATE parser)
+    target_link_libraries(struct_parser_test PRIVATE doctest::doctest)
+
+    add_test(NAME struct_parser_test COMMAND struct_parser_test)
 endif()

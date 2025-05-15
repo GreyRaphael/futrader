@@ -9,12 +9,6 @@
 #include "string_parser.hpp"
 #include "struct_parser.hpp"
 
-// Define a concept that checks for a member named ErrorID
-template <typename E>
-concept HasErrorID = requires(E const &e) {
-    { e.ErrorID } -> std::convertible_to<int>;
-};
-
 // error config
 namespace errconfig {
 
@@ -48,6 +42,12 @@ inline const std::map<int, std::string> discon_errors{
     {0x2003, "收到错误报文"},
 };
 }  // namespace errconfig
+
+// Define a concept that checks for a member named ErrorID
+template <typename E>
+concept HasErrorID = requires(E const &e) {
+    { e.ErrorID } -> std::convertible_to<int>;
+};
 
 // handle any kinds of reponse
 template <typename T, typename E>
