@@ -1,8 +1,12 @@
 add_library(parser config_parser.cpp)
 
+# ylt depends on frozen
+target_link_libraries(parser PUBLIC frozen::frozen frozen::frozen-headers)
+# use ylt
 target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party)
-target_include_directories(parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# use toml++
 target_link_libraries(parser PRIVATE tomlplusplus::tomlplusplus)
+target_include_directories(parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(BUILD_TESTING)
     # test config_parser.c
