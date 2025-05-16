@@ -4,6 +4,7 @@
 
 #include <dylib.hpp>
 #include <error_parser.hpp>
+#include <filesystem>
 #include <format>
 #include <memory>
 #include <optional>
@@ -19,16 +20,16 @@ struct CtpMdClient::Impl {
 CtpMdClient::CtpMdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr)
     : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
     // read toml config
-    _pimpl->cfg = CtpConfig::read_config(cfg_filename);
+    _pimpl->cfg = CtpConfig::read_config(cfg_filename, "md");
 }
 
 CtpMdClient::~CtpMdClient() { _api->Release(); }
 
 void CtpMdClient::Start() {
     // load dylib
-    auto dylib_path = std::format("{}/{}", _pimpl->cfg.lib_dir, _pimpl->cfg.platform);
+    auto dylib_path = std::filesystem::path{_pimpl->cfg.Interface};
     // inplace-construct the dylib inside the optional
-    _pimpl->lib.emplace(dylib_path, "thostmduserapi_se.so", dylib::no_filename_decorations);
+    _pimpl->lib.emplace(dylib_path.parent_path().c_str(), dylib_path.filename().c_str(), dylib::no_filename_decorations);
 
     auto GetApiVersion = _pimpl->lib->get_function<const char *()>("_ZN15CThostFtdcMdApi13GetApiVersionEv");
     std::println("md_ver={}", GetApiVersion());
@@ -37,7 +38,7 @@ void CtpMdClient::Start() {
     // register
     _api = CreateFtdcMdApi("", false, false);
     _api->RegisterSpi(this);
-    _api->RegisterFront(_pimpl->cfg.front_md.data());
+    _api->RegisterFront(_pimpl->cfg.Front.data());
 
     // connect
     _api->Init();
@@ -45,7 +46,7 @@ void CtpMdClient::Start() {
 
     // login
     CThostFtdcReqUserLoginField req{};
-    _pimpl->cfg.user_id.copy(req.UserID, _pimpl->cfg.user_id.length());
+    _pimpl->cfg.UserID.copy(req.UserID, _pimpl->cfg.UserID.length());
     _api->ReqUserLogin(&req, 1);
     _sem.acquire();
 }
@@ -87,5 +88,5 @@ void CtpMdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecifi
 
 void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
     // print_struct(pDepthMarketData);
-    // _channel_ptr->push(*pDepthMarketData);
+    _channel_ptr->push(*pDepthMarketData);
 }

@@ -12,13 +12,13 @@ TEST_CASE("openctp") {
     std::string_view cfg_filename{"openctp.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
     REQUIRE(std::filesystem::exists("errors.toml"));
-    REQUIRE(std::filesystem::exists("openctp/lin64/thostmduserapi_se.so"));
+    REQUIRE(std::filesystem::exists("tts/thostmduserapi_se.so"));
 
     auto channel_ptr = std::make_shared<MarketDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
     md_cli.Start();
-    md_cli.Subscribe({"MA505", "rb2507"});
+    md_cli.Subscribe({"MA509", "rb2507"});
 
     while (true) {
         auto value = channel_ptr->pop();
@@ -36,13 +36,13 @@ TEST_CASE("ctp") {
     std::string_view cfg_filename{"ctp.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
     REQUIRE(std::filesystem::exists("errors.toml"));
-    REQUIRE(std::filesystem::exists("ctp/lin64/thostmduserapi_se.so"));
+    REQUIRE(std::filesystem::exists("ctp/thostmduserapi_se.so"));
 
     auto channel_ptr = std::make_shared<MarketDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
     md_cli.Start();
-    md_cli.Subscribe({"MA505", "rb2507"});
+    md_cli.Subscribe({"MA509", "rb2507"});
 
     while (true) {
         auto value = channel_ptr->pop();
