@@ -14,7 +14,7 @@ if(BUILD_TESTING)
     target_link_libraries(config_parser_test PRIVATE parser)
     target_link_libraries(config_parser_test PRIVATE doctest::doctest)
 
-    # copy real ctp.toml
+    # copy real brokers.toml
     if(DEFINED ENV{BROKER_PATH})
         set(BROKER_CFG_PATH $ENV{BROKER_PATH})
     else()
@@ -42,6 +42,7 @@ if(BUILD_TESTING)
     target_link_libraries(error_parser_test PRIVATE parser)
     target_link_libraries(error_parser_test PRIVATE doctest::doctest)
 
+    # copy errors.toml
     configure_file(
         "${CMAKE_SOURCE_DIR}/config/errors.toml"
         "${CMAKE_CURRENT_BINARY_DIR}/errors.toml"
