@@ -19,8 +19,8 @@ inline void print_struct(T const *ptr) noexcept {
     std::println();
 }
 
-TEST_CASE("testing broker.toml") {
-    std::string_view filename{"broker.toml"};
+TEST_CASE("testing ctp.toml") {
+    std::string_view filename{"ctp.toml"};
     REQUIRE(std::filesystem::exists(filename));
 
     auto td_config = CtpConfig::read_config(filename, "td");
@@ -33,5 +33,22 @@ TEST_CASE("testing broker.toml") {
     print_struct(&md_config);
     std::filesystem::path md_libpath{md_config.Interface};
     CHECK_EQ(md_libpath.parent_path().string(), "ctp");
+    CHECK_EQ(md_libpath.filename().string(), "thostmduserapi_se.so");
+}
+
+TEST_CASE("testing openctp.toml") {
+    std::string_view filename{"openctp.toml"};
+    REQUIRE(std::filesystem::exists(filename));
+
+    auto td_config = CtpConfig::read_config(filename, "td");
+    print_struct(&td_config);
+    std::filesystem::path td_libpath{td_config.Interface};
+    CHECK_EQ(td_libpath.parent_path().string(), "tts");
+    CHECK_EQ(td_libpath.filename().string(), "thosttraderapi_se.so");
+
+    auto md_config = CtpConfig::read_config(filename, "md");
+    print_struct(&md_config);
+    std::filesystem::path md_libpath{md_config.Interface};
+    CHECK_EQ(md_libpath.parent_path().string(), "tts");
     CHECK_EQ(md_libpath.filename().string(), "thostmduserapi_se.so");
 }
