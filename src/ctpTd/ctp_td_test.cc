@@ -10,7 +10,7 @@ TEST_CASE("openctp") {
     std::string_view cfg_filename{"openctp.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
     REQUIRE(std::filesystem::exists("errors.toml"));
-    REQUIRE(std::filesystem::exists("openctp/lin64/thosttraderapi_se.so"));
+    REQUIRE(std::filesystem::exists("tts/thosttraderapi_se.so"));
 
     CtpTdClient td_cli{cfg_filename};
     td_cli.Start();
@@ -30,7 +30,7 @@ TEST_CASE("ctp") {
     std::string_view cfg_filename{"ctp.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
     REQUIRE(std::filesystem::exists("errors.toml"));
-    REQUIRE(std::filesystem::exists("ctp/lin64/thosttraderapi_se.so"));
+    REQUIRE(std::filesystem::exists("ctp/thosttraderapi_se.so"));
     CtpTdClient td_cli{cfg_filename};
     td_cli.Start();
     // td_cli.QryInstrument({"SHFE", "INE", "CZCE"});

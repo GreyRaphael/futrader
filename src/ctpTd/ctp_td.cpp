@@ -5,6 +5,7 @@
 #include <cstring>
 #include <dylib.hpp>
 #include <error_parser.hpp>
+#include <filesystem>
 #include <format>
 #include <memory>
 #include <optional>
@@ -19,15 +20,15 @@ struct CtpTdClient::Impl {
 
 CtpTdClient::CtpTdClient(std::string_view cfg_file) : pImpl(std::make_unique<Impl>()) {
     // read toml config
-    pImpl->cfg = CtpConfig::read_config(cfg_file);
+    pImpl->cfg = CtpConfig::read_config(cfg_file, "td");
 }
 
 CtpTdClient::~CtpTdClient() { _tdapi->Release(); }
 
 void CtpTdClient::Start() {
     // load dylib
-    auto dylib_path = std::format("{}/{}", pImpl->cfg.lib_dir, pImpl->cfg.platform);
-    pImpl->lib.emplace(dylib_path, "thosttraderapi_se.so", dylib::no_filename_decorations);
+    auto dylib_path = std::filesystem::path(pImpl->cfg.Interface);
+    pImpl->lib.emplace(dylib_path.parent_path().c_str(), dylib_path.filename().c_str(), dylib::no_filename_decorations);
 
     auto GetApiVersion = pImpl->lib->get_function<const char *()>("_ZN19CThostFtdcTraderApi13GetApiVersionEv");
     std::println("td_ver={}", GetApiVersion());
@@ -36,7 +37,7 @@ void CtpTdClient::Start() {
     // register
     _tdapi = CreateFtdcTraderApi("");
     _tdapi->RegisterSpi(this);
-    _tdapi->RegisterFront(pImpl->cfg.front_td.data());
+    _tdapi->RegisterFront(pImpl->cfg.Front.data());
 
     // connect
     _tdapi->Init();
@@ -44,18 +45,18 @@ void CtpTdClient::Start() {
 
     // auth
     CThostFtdcReqAuthenticateField auth_req{};
-    pImpl->cfg.broker_id.copy(auth_req.BrokerID, pImpl->cfg.broker_id.length());
-    pImpl->cfg.user_id.copy(auth_req.UserID, pImpl->cfg.user_id.length());
-    pImpl->cfg.auth_id.copy(auth_req.AppID, pImpl->cfg.auth_id.length());
-    pImpl->cfg.auth_code.copy(auth_req.AuthCode, pImpl->cfg.auth_code.length());
+    pImpl->cfg.BrokerID.copy(auth_req.BrokerID, pImpl->cfg.BrokerID.length());
+    pImpl->cfg.UserID.copy(auth_req.UserID, pImpl->cfg.UserID.length());
+    pImpl->cfg.AppID.copy(auth_req.AppID, pImpl->cfg.AppID.length());
+    pImpl->cfg.AuthCode.copy(auth_req.AuthCode, pImpl->cfg.AuthCode.length());
     _tdapi->ReqAuthenticate(&auth_req, ++_reqId);
     _sem.acquire();
 
     // login
     CThostFtdcReqUserLoginField login_req{};
-    pImpl->cfg.broker_id.copy(login_req.BrokerID, pImpl->cfg.broker_id.length());
-    pImpl->cfg.user_id.copy(login_req.UserID, pImpl->cfg.user_id.length());
-    pImpl->cfg.password.copy(login_req.Password, pImpl->cfg.password.length());
+    pImpl->cfg.BrokerID.copy(login_req.BrokerID, pImpl->cfg.BrokerID.length());
+    pImpl->cfg.UserID.copy(login_req.UserID, pImpl->cfg.UserID.length());
+    pImpl->cfg.Password.copy(login_req.Password, pImpl->cfg.Password.length());
     _tdapi->ReqUserLogin(&login_req, ++_reqId);
     _sem.acquire();
 }
