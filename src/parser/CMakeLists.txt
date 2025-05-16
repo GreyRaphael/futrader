@@ -14,6 +14,20 @@ if(BUILD_TESTING)
     target_link_libraries(config_parser_test PRIVATE parser)
     target_link_libraries(config_parser_test PRIVATE doctest::doctest)
 
+    # copy real ctp.toml
+    if(DEFINED ENV{BROKER_PATH})
+        set(BROKER_CFG_PATH $ENV{BROKER_PATH})
+    else()
+        set(BROKER_CFG_PATH "${CMAKE_SOURCE_DIR}/config/brokers.toml")
+    endif()
+    message(STATUS "Using Broker path: ${BROKER_CFG_PATH}")
+    
+    configure_file(
+        "${BROKER_CFG_PATH}"
+        "${CMAKE_CURRENT_BINARY_DIR}/brokers.toml"
+        COPYONLY
+    )
+
     add_test(NAME config_parser_test COMMAND config_parser_test)
 
     # test string_parser.hpp
@@ -27,6 +41,12 @@ if(BUILD_TESTING)
     add_executable(error_parser_test error_parser_test.cc)
     target_link_libraries(error_parser_test PRIVATE parser)
     target_link_libraries(error_parser_test PRIVATE doctest::doctest)
+
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/config/errors.toml"
+        "${CMAKE_CURRENT_BINARY_DIR}/errors.toml"
+        COPYONLY
+    )
 
     add_test(NAME error_parser_test COMMAND error_parser_test)
 

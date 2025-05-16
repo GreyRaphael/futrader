@@ -2,15 +2,17 @@
 #include <string>
 
 struct CtpConfig {
-    std::string lib_dir{};
-    std::string platform{};
-    std::string front_td{};
-    std::string front_md{};
-    std::string auth_id{};
-    std::string auth_code{};
-    std::string broker_id{};
-    std::string user_id{};
-    std::string password{};
+    std::string Name{};
+    std::string UserProductInfo{};
+    std::string BrokerID{};
+    std::string AppID{};
+    std::string AuthCode{};
+    std::string TdInterface{};
+    std::string TdFront{};
+    std::string MdInterface{};
+    std::string MdFront{};
+    std::string UserID{};
+    std::string Password{};
 
     static CtpConfig read_config(std::string_view filename);
 };
