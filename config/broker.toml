@@ -1,0 +1,19 @@
+[td]
+UserProductInfo = "futrader"
+BrokerID = ""
+AppID = ""
+AuthCode = ""
+Interface = "ctp/thosttraderapi_se.so"
+Front = "tcp://211.136.125.127:51205"
+UserID = "your_id"
+Password = "your_pwd"
+
+[md]
+UserProductInfo = "futrader"
+BrokerID = ""
+AppID = ""
+AuthCode = ""
+Interface = "ctp/thostmduserapi_se.so"
+Front = "tcp://211.136.125.127:51213"
+UserID = "your_id"
+Password = "your_pwd"

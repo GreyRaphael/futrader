@@ -2,19 +2,16 @@
 #include <string>
 
 struct CtpConfig {
-    std::string Name{};
     std::string UserProductInfo{};
     std::string BrokerID{};
     std::string AppID{};
     std::string AuthCode{};
-    std::string TdInterface{};
-    std::string TdFront{};
-    std::string MdInterface{};
-    std::string MdFront{};
+    std::string Interface{};
+    std::string Front{};
     std::string UserID{};
     std::string Password{};
 
-    static CtpConfig read_config(std::string_view filename);
+    static CtpConfig read_config(std::string_view filename, std::string_view user_type);
 };
 
 struct BtConfig {

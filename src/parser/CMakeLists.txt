@@ -14,17 +14,17 @@ if(BUILD_TESTING)
     target_link_libraries(config_parser_test PRIVATE parser)
     target_link_libraries(config_parser_test PRIVATE doctest::doctest)
 
-    # copy real brokers.toml
+    # copy real broker.toml
     if(DEFINED ENV{BROKER_PATH})
         set(BROKER_CFG_PATH $ENV{BROKER_PATH})
     else()
-        set(BROKER_CFG_PATH "${CMAKE_SOURCE_DIR}/config/brokers.toml")
+        set(BROKER_CFG_PATH "${CMAKE_SOURCE_DIR}/config/broker.toml")
     endif()
     message(STATUS "Using Broker path: ${BROKER_CFG_PATH}")
     
     configure_file(
         "${BROKER_CFG_PATH}"
-        "${CMAKE_CURRENT_BINARY_DIR}/brokers.toml"
+        "${CMAKE_CURRENT_BINARY_DIR}/broker.toml"
         COPYONLY
     )
 
