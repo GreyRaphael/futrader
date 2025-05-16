@@ -1,6 +1,7 @@
 add_library(duck_loader duck_loader.cpp)
 
 target_include_directories(duck_loader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# link 3rd duckdb so
 target_link_libraries(duck_loader PRIVATE duckdb)
 
 if(BUILD_TESTING)

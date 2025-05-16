@@ -6,7 +6,7 @@
 
 #include "duck_loader.h"
 
-TEST_CASE("openctp") {
+TEST_CASE("duckdb") {
     std::string_view db_path{"test.db"};
     REQUIRE(std::filesystem::exists(db_path));
 }
