@@ -24,9 +24,13 @@ int main(int argc, char const* argv[]) {
 
     while (true) {
         auto value = channel_ptr->pop();
-        if (value) {
-            nng_send(pub_sock, &value.value(), sizeof(CThostFtdcDepthMarketDataField), 0);  // flags=0, default for pub mode
-            // print_struct(&value.value());
+
+        if (!value) {
+            // sleep time in ms
+            nng_msleep(config.PollIntervalMs);
+            continue;
         }
+        // print_struct(&value.value());
+        nng_send(pub_sock, &value.value(), sizeof(CThostFtdcDepthMarketDataField), 0);  // flags=0, default for pub mode
     }
 }

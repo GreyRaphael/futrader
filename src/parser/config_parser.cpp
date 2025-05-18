@@ -31,6 +31,7 @@ NngConfig NngConfig::read_config(std::string_view filename) {
     NngConfig cfg{};
     cfg.Address = config["Address"].value_or("ipc:///tmp/pubsub.ipc");
     cfg.BrokerFile = config["BrokerFile"].value_or("openctp.toml");
+    cfg.PollIntervalMs = config["PollIntervalMs"].value_or(0);
     if (auto arr = config["Symbols"].as_array()) {
         for (auto &&e : *arr) {
             cfg.Symbols.push_back(e.value_or(""));

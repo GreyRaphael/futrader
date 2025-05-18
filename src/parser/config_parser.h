@@ -25,6 +25,7 @@ struct BtConfig {
 
 struct NngConfig {
     std::string Address;
+    int PollIntervalMs;
     std::string BrokerFile;
     std::vector<std::string> Symbols;
 
