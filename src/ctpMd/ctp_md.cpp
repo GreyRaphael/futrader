@@ -2,6 +2,7 @@
 
 #include <config_parser.h>
 
+#include <cassert>
 #include <dylib.hpp>
 #include <error_parser.hpp>
 #include <filesystem>
@@ -19,8 +20,13 @@ struct CtpMdClient::Impl {
 
 CtpMdClient::CtpMdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr)
     : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
+    // assert broker.toml exist
+    assert(std::filesystem::exists(cfg_filename));
+    assert(std::filesystem::exists("errors.toml"));
     // read toml config
     _pimpl->cfg = CtpConfig::read_config(cfg_filename, "md");
+    // assert *.so exist
+    assert(std::filesystem::exists(_pimpl->cfg.Interface));
 }
 
 CtpMdClient::~CtpMdClient() { _api->Release(); }
@@ -70,11 +76,11 @@ void CtpMdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CTh
     if (bIsLast) _sem.release();
 };
 
-void CtpMdClient::Subscribe(std::vector<std::string> symbols) {
+void CtpMdClient::Subscribe(std::vector<std::string> const &symbols) {
     std::vector<char *> symbol_ptrs;
     symbol_ptrs.reserve(256);
     for (auto &e : symbols) {
-        symbol_ptrs.push_back(e.data());
+        symbol_ptrs.push_back(const_cast<char *>(e.data()));
     }
     _api->SubscribeMarketData(symbol_ptrs.data(), symbol_ptrs.size());
     _sem.acquire();

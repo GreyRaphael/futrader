@@ -14,7 +14,7 @@ struct CtpMdClient : CThostFtdcMdSpi {
     ~CtpMdClient();
 
     void Start();
-    void Subscribe(std::vector<std::string> symbols);
+    void Subscribe(std::vector<std::string> const &symbols);
 
    private:
     void OnFrontConnected() override;
