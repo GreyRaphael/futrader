@@ -46,6 +46,12 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_BINARY_DIR}/errors.toml"
         COPYONLY
     )
+    # copy nng.toml
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/config/nng.toml"
+        "${CMAKE_CURRENT_BINARY_DIR}/nng.toml"
+        COPYONLY
+    )
 
     add_test(NAME error_parser_test COMMAND error_parser_test)
 

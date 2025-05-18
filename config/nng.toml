@@ -1,0 +1,3 @@
+Address = "ipc:///tmp/pubsub.ipc"
+BrokerFile = "openctp.toml"
+Symbols = ["MA509", "rb2507"]

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 struct CtpConfig {
     std::string UserProductInfo{};
@@ -20,4 +21,12 @@ struct BtConfig {
     std::string interval{};
 
     static BtConfig read_config(std::string_view filename);
+};
+
+struct NngConfig {
+    std::string Address;
+    std::string BrokerFile;
+    std::vector<std::string> Symbols;
+
+    static NngConfig read_config(std::string_view filename);
 };

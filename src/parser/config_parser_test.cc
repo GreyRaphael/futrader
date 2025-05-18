@@ -52,3 +52,14 @@ TEST_CASE("testing openctp.toml") {
     CHECK_EQ(md_libpath.parent_path().string(), "tts");
     CHECK_EQ(md_libpath.filename().string(), "thostmduserapi_se.so");
 }
+
+TEST_CASE("testing nng.toml") {
+    std::string_view filename{"nng.toml"};
+    REQUIRE(std::filesystem::exists(filename));
+
+    auto nng_config = NngConfig::read_config(filename);
+    CHECK_EQ(nng_config.Address, "ipc:///tmp/pubsub.ipc");
+    CHECK_EQ(nng_config.BrokerFile, "openctp.toml");
+    CHECK_EQ(nng_config.Symbols[0], "MA509");
+    CHECK_EQ(nng_config.Symbols[1], "rb2507");
+}

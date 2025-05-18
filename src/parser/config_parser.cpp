@@ -3,6 +3,7 @@
 #include <toml++/toml.h>
 
 #include <string_view>
+#include <vector>
 
 CtpConfig CtpConfig::read_config(std::string_view filename, std::string_view user_type) {
     auto config = toml::parse_file(filename);
@@ -22,4 +23,18 @@ CtpConfig CtpConfig::read_config(std::string_view filename, std::string_view use
 BtConfig BtConfig::read_config(std::string_view filename) {
     // todo
     return BtConfig{};
+}
+
+NngConfig NngConfig::read_config(std::string_view filename) {
+    auto config = toml::parse_file(filename);
+
+    NngConfig cfg{};
+    cfg.Address = config["Address"].value_or("ipc:///tmp/pubsub.ipc");
+    cfg.BrokerFile = config["BrokerFile"].value_or("openctp.toml");
+    if (auto arr = config["Symbols"].as_array()) {
+        for (auto &&e : *arr) {
+            cfg.Symbols.push_back(e.value_or(""));
+        }
+    }
+    return cfg;
 }
