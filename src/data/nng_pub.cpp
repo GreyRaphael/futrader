@@ -7,6 +7,7 @@
 
 #include "config_parser.h"
 #include "ctp_md.h"
+#include "struct_parser.hpp"
 
 int main(int argc, char const* argv[]) {
     std::string_view cfg_filename = "nng.toml";
@@ -30,7 +31,7 @@ int main(int argc, char const* argv[]) {
             nng_msleep(config.PollIntervalMs);
             continue;
         }
-        // print_struct(&value.value());
+        print_struct(&value.value());
         nng_send(pub_sock, &value.value(), sizeof(CThostFtdcDepthMarketDataField), 0);  // flags=0, default for pub mode
     }
 }
