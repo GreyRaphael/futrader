@@ -3,6 +3,7 @@
 #include <sys/syscall.h>
 
 #include <chrono>
+#include <cstring>
 #include <ctime>
 #include <format>
 #include <optional>
@@ -61,18 +62,19 @@ struct BarGenerator {
             // first tick
             _last_bar_vol = pDepthMarketData->Volume;
             _last_bar_amt = pDepthMarketData->Turnover;
-            _current = BarData{
-                stamp_start,
-                stamp_last,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->LastPrice,
-                0,
-                0,
-                pDepthMarketData->OpenInterest,
-                1,  // todo
-            };
+
+            _current = BarData{};
+            strcpy(_current->symbol, pDepthMarketData->InstrumentID);
+            _current->stamp_start = stamp_start;
+            _current->stamp_last = stamp_last;
+            _current->open = pDepthMarketData->LastPrice,
+            _current->high = pDepthMarketData->LastPrice,
+            _current->low = pDepthMarketData->LastPrice,
+            _current->close = pDepthMarketData->LastPrice,
+            _current->volume = 0;
+            _current->amount = 0;
+            _current->oi = pDepthMarketData->OpenInterest;
+            _current->adj = 1.0;
             return _current.value();
         }
 
@@ -81,18 +83,18 @@ struct BarGenerator {
             _last_bar_vol += _current->volume;
             _last_bar_amt += _current->amount;
             // start new bar
-            _current = BarData{
-                stamp_start,
-                stamp_last,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->LastPrice,
-                pDepthMarketData->Volume - _last_bar_vol,
-                pDepthMarketData->Turnover - _last_bar_amt,
-                pDepthMarketData->OpenInterest,
-                1,  // todo
-            };
+            _current = BarData{};
+            strcpy(_current->symbol, pDepthMarketData->InstrumentID);
+            _current->stamp_start = stamp_start;
+            _current->stamp_last = stamp_last;
+            _current->open = pDepthMarketData->LastPrice,
+            _current->high = pDepthMarketData->LastPrice,
+            _current->low = pDepthMarketData->LastPrice,
+            _current->close = pDepthMarketData->LastPrice,
+            _current->volume = 0;
+            _current->amount = 0;
+            _current->oi = pDepthMarketData->OpenInterest;
+            _current->adj = 1.0;
             return _current.value();
         }
 
