@@ -7,6 +7,9 @@ target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party)
 # use toml++
 target_link_libraries(parser PRIVATE tomlplusplus::tomlplusplus)
 target_include_directories(parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# use ctp headers
+target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp/lin64)
+target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/src/common)
 
 if(BUILD_TESTING)
     # test config_parser.c
@@ -61,4 +64,11 @@ if(BUILD_TESTING)
     target_link_libraries(struct_parser_test PRIVATE doctest::doctest)
 
     add_test(NAME struct_parser_test COMMAND struct_parser_test)
+
+    # test tick_parser.hpp
+    add_executable(tick_parser_test tick_parser_test.cc)
+    target_link_libraries(tick_parser_test PRIVATE parser)
+    target_link_libraries(tick_parser_test PRIVATE doctest::doctest)
+
+    add_test(NAME tick_parser_test COMMAND tick_parser_test)
 endif()
