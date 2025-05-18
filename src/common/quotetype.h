@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-struct Bar {
-    int64_t dt_start;
-    int64_t dt_end;
+struct BarData {
+    int64_t stamp_start;
+    int64_t stamp_last;
     double open;
     double high;
     double low;
