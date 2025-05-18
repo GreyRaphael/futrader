@@ -3,6 +3,7 @@
     "doctest",
     "dylib",
     "tomlplusplus",
+    "nng",
     "frozen"
   ]
 }

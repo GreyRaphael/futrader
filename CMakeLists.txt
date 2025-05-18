@@ -12,6 +12,7 @@ find_package(doctest CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 find_package(frozen CONFIG REQUIRED)
+find_package(nng CONFIG REQUIRED)
 
 add_library(duckdb SHARED IMPORTED)
 set_target_properties(duckdb PROPERTIES
