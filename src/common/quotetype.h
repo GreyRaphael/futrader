@@ -3,8 +3,6 @@
 #include <cstdint>
 
 typedef char symbol_t[32];
-typedef int volume_array_t[5];
-typedef double price_array_t[5];
 
 struct BarData {
     symbol_t symbol;
@@ -39,8 +37,24 @@ struct TickData {
     double preoi;
     double avgprice;
     double adj;
-    volume_array_t ask_volumes;
-    volume_array_t bid_volumes;
-    price_array_t ask_prices;
-    price_array_t bid_prices;
+    double ap1;
+    double ap2;
+    double ap3;
+    double ap4;
+    double ap5;
+    double bp1;
+    double bp2;
+    double bp3;
+    double bp4;
+    double bp5;
+    int av1;
+    int av2;
+    int av3;
+    int av4;
+    int av5;
+    int bv1;
+    int bv2;
+    int bv3;
+    int bv4;
+    int bv5;
 };
