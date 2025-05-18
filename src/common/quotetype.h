@@ -12,13 +12,5 @@ struct Bar {
     double volume;
     double amount;
     double oi;
-};
-
-struct Tick {
-    int64_t dt;
-    double open;
-    double last;
-    double volume;
-    double amount;
-    double oi;
+    double adj;
 };
