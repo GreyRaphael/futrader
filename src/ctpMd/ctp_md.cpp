@@ -22,7 +22,7 @@ struct CtpMdClient::Impl {
     std::optional<dylib> lib{};
 };
 
-CtpMdClient::CtpMdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr)
+CtpMdClient::CtpMdClient(std::string_view cfg_filename, TickDataChannelPtr channel_ptr)
     : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
     // assert broker.toml exist
     assert(std::filesystem::exists(cfg_filename));

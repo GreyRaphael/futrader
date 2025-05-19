@@ -19,7 +19,7 @@ int main(int argc, char const* argv[]) {
     nng_pub0_open(&pub_sock);
     nng_listen(pub_sock, config.Address.data(), nullptr, 0);  // listener=NULL; flags=0 ignored
 
-    auto channel_ptr = std::make_shared<MarketDataChannel>();
+    auto channel_ptr = std::make_shared<TickDataChannel>();
     CtpMdClient md_cli{config.BrokerFile, channel_ptr};
     md_cli.Start();
     md_cli.Subscribe(config.Symbols);

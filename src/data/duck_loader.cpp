@@ -17,7 +17,8 @@ struct HistoryTickLoader::Impl {
     duckdb_result result;
 };
 
-HistoryTickLoader::HistoryTickLoader(std::string_view cfg_filename) : _pimpl(std::make_unique<Impl>()) {
+HistoryTickLoader::HistoryTickLoader(std::string_view cfg_filename, TickDataChannelPtr channel_ptr)
+    : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
     // assert duckdb.toml exist
     assert(std::filesystem::exists(cfg_filename));
     // read toml config

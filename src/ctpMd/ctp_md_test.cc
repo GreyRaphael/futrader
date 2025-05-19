@@ -14,7 +14,7 @@ TEST_CASE("openctp") {
     REQUIRE(std::filesystem::exists("errors.toml"));
     REQUIRE(std::filesystem::exists("tts/thostmduserapi_se.so"));
 
-    auto channel_ptr = std::make_shared<MarketDataChannel>();
+    auto channel_ptr = std::make_shared<TickDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
     md_cli.Start();
@@ -38,7 +38,7 @@ TEST_CASE("ctp") {
     REQUIRE(std::filesystem::exists("errors.toml"));
     REQUIRE(std::filesystem::exists("ctp/thostmduserapi_se.so"));
 
-    auto channel_ptr = std::make_shared<MarketDataChannel>();
+    auto channel_ptr = std::make_shared<TickDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
     md_cli.Start();
