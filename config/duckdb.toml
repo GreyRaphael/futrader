@@ -1,0 +1,4 @@
+ParquetFiles = "/mnt/g/ticks/futures.parquet"
+DateStart = "2025-02-20"
+DateEnd = "2025-02-27"
+Symbols = ["MA509", "rb2507"]
