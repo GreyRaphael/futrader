@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <spsc.hpp>
 #include <string_view>
@@ -15,7 +14,7 @@ struct HistoryTickLoader {
     ~HistoryTickLoader();
 
    private:
-    bool query(std::string_view symbol, int64_t dt_start, int64_t dt_end);
+    void Start();
 
     struct Impl;
     std::unique_ptr<Impl> _pimpl{};

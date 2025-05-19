@@ -3,15 +3,17 @@
 #include <duckdb.h>
 
 #include <cassert>
+#include <cstring>
 #include <filesystem>
 #include <format>
 #include <memory>
 #include <print>
 
 #include "config_parser.h"
+#include "quotetype.h"
 
 struct HistoryTickLoader::Impl {
-    DuckdbConfig cfg;
+    DuckdbConfig cfg{};
     duckdb_database db;
     duckdb_connection conn;
     duckdb_result result;
@@ -35,22 +37,24 @@ HistoryTickLoader::~HistoryTickLoader() {
     duckdb_close(&_pimpl->db);
 }
 
-bool HistoryTickLoader::query(std::string_view symbol, int64_t dt_start, int64_t dt_end) {
-    auto sql = std::format("SELECT * FROM tick WHERE symbol='{}' AND dt_start>={} AND dt_end<={}", symbol, dt_start, dt_end);
+void HistoryTickLoader::Start() {
+    auto sql = std::format("SELECT code, epoch_ms(dt), open FROM '{}' WHERE code IN ({}) AND dt>={} AND dt<={}", _pimpl->cfg.ParquetPath, "rb2507", _pimpl->cfg.DateStart, _pimpl->cfg.DateEnd);
     if (duckdb_query(_pimpl->conn, sql.data(), &_pimpl->result) != DuckDBSuccess) {
         duckdb_destroy_result(&_pimpl->result);
-        return false;
+        return;
     }
 
     auto rows = duckdb_row_count(&_pimpl->result);
     auto cols = duckdb_column_count(&_pimpl->result);
     for (auto r = 0; r < rows; r++) {
-        auto id = duckdb_value_int64(&_pimpl->result, 0, r);
-        auto age = duckdb_value_double(&_pimpl->result, 1, r);
-        auto name = duckdb_value_string(&_pimpl->result, 2, r);
-        auto s = std::string_view{name.data, name.size};
-        std::println("id={},age={},name={}", id, age, s);
-        duckdb_free(name.data);
+        TickData tick{};
+        auto code = duckdb_value_string(&_pimpl->result, 0, r);
+        auto open = duckdb_value_double(&_pimpl->result, 2, r);
+        strncpy(tick.symbol, code.data, code.size);
+        tick.stamp = duckdb_value_int64(&_pimpl->result, 1, r);
+        tick.open = duckdb_value_double(&_pimpl->result, 2, r);
+
+        // free memeory of string
+        duckdb_free(code.data);
     }
-    return true;
 }
