@@ -28,7 +28,7 @@ TEST_CASE("openctp") {
             continue;
         }
         // print_struct(&value);
-        std::println("{},{},{}", value->UpdateTime, value->InstrumentID, value->LastPrice);
+        std::println("{},{},{}", value->stamp, value->symbol, value->last);
     }
 }
 
@@ -52,6 +52,6 @@ TEST_CASE("ctp") {
             continue;
         }
         // print_struct(&value);
-        std::println("{},{},{}", value->UpdateTime, value->InstrumentID, value->LastPrice);
+        std::println("{},{},{}", value->stamp, value->symbol, value->last);
     }
 }

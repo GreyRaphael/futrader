@@ -6,7 +6,9 @@
 #include <string>
 #include <vector>
 
-using MarketDataChannel = lockfree::SPSC<CThostFtdcDepthMarketDataField, 1024>;
+#include "quotetype.h"
+
+using MarketDataChannel = lockfree::SPSC<TickData, 1024>;
 using MarketDataChannelPtr = std::shared_ptr<MarketDataChannel>;
 
 struct CtpMdClient : CThostFtdcMdSpi {
