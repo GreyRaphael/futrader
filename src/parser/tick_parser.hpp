@@ -64,7 +64,7 @@ struct BarGenerator {
             _last_bar_amt = pDepthMarketData->Turnover;
 
             _current = BarData{};
-            strcpy(_current->symbol, pDepthMarketData->InstrumentID);
+            strncpy(_current->symbol, pDepthMarketData->InstrumentID, 31);
             _current->stamp_start = stamp_start;
             _current->stamp_last = stamp_last;
             _current->open = pDepthMarketData->LastPrice,
@@ -84,7 +84,7 @@ struct BarGenerator {
             _last_bar_amt += _current->amount;
             // start new bar
             _current = BarData{};
-            strcpy(_current->symbol, pDepthMarketData->InstrumentID);
+            strncpy(_current->symbol, pDepthMarketData->InstrumentID, 31);
             _current->stamp_start = stamp_start;
             _current->stamp_last = stamp_last;
             _current->open = pDepthMarketData->LastPrice,
