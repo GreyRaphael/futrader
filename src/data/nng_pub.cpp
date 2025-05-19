@@ -7,6 +7,7 @@
 
 #include "config_parser.h"
 #include "ctp_md.h"
+#include "quotetype.h"
 #include "struct_parser.hpp"
 
 int main(int argc, char const* argv[]) {
@@ -32,6 +33,6 @@ int main(int argc, char const* argv[]) {
             continue;
         }
         print_struct(&value.value());
-        nng_send(pub_sock, &value.value(), sizeof(CThostFtdcDepthMarketDataField), 0);  // flags=0, default for pub mode
+        nng_send(pub_sock, &value.value(), sizeof(TickData), 0);  // flags=0, default for pub mode
     }
 }
