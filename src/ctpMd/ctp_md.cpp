@@ -116,7 +116,7 @@ void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMar
     tick.preclose = pDepthMarketData->PreClosePrice;
     tick.presettle = pDepthMarketData->PreSettlementPrice;
     tick.volume = pDepthMarketData->Volume;
-    tick.amouont = pDepthMarketData->Turnover;
+    tick.amount = pDepthMarketData->Turnover;
     tick.oi = pDepthMarketData->OpenInterest;
     tick.preoi = pDepthMarketData->PreOpenInterest;
     tick.avgprice = pDepthMarketData->AveragePrice;

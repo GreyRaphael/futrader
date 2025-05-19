@@ -32,7 +32,7 @@ struct TickData {
     double preclose;
     double presettle;
     double volume;
-    double amouont;
+    double amount;
     double oi;
     double preoi;
     double avgprice;
