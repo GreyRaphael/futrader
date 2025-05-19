@@ -3,6 +3,7 @@
 #include <memory>
 #include <spsc.hpp>
 #include <string_view>
+#include <vector>
 
 #include "quotetype.h"
 
@@ -13,9 +14,10 @@ struct HistoryTickLoader {
     HistoryTickLoader(std::string_view cfg_filename, TickDataChannelPtr channel_ptr);
     ~HistoryTickLoader();
 
-   private:
-    void Start();
+    void Subscribe(std::vector<std::string> const &symbols);
+    void Run();
 
+   private:
     struct Impl;
     std::unique_ptr<Impl> _pimpl{};
 

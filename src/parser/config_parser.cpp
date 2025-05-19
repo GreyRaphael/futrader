@@ -47,10 +47,5 @@ DuckdbConfig DuckdbConfig::read_config(std::string_view filename) {
     cfg.ParquetPath = config["ParquetPath"].value_or("futures.parquet");
     cfg.DateStart = config["DateStart"].value_or("2025-01-01");
     cfg.DateEnd = config["DateEnd"].value_or("2025-02-01");
-    if (auto arr = config["Symbols"].as_array()) {
-        for (auto &&e : *arr) {
-            cfg.Symbols.push_back(e.value_or(""));
-        }
-    }
     return cfg;
 }

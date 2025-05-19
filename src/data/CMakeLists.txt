@@ -40,6 +40,13 @@ configure_file(
     COPYONLY
 )
 
+# copy duckdb.toml
+configure_file(
+    "${CMAKE_SOURCE_DIR}/config/duckdb.toml"
+    "${CMAKE_CURRENT_BINARY_DIR}/duckdb.toml"
+    COPYONLY
+)
+
 # copy broker tomls
 if(DEFINED ENV{BROKERS_DIR})
     set(BROKERS_CFG_DIR $ENV{BROKERS_DIR})

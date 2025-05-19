@@ -8,12 +8,16 @@
 #include <format>
 #include <memory>
 #include <print>
+#include <ranges>
+#include <string>
+#include <utility>
 
 #include "config_parser.h"
 #include "quotetype.h"
 
 struct HistoryTickLoader::Impl {
     DuckdbConfig cfg{};
+    std::string symbols_holder{};
     duckdb_database db;
     duckdb_connection conn;
     duckdb_result result;
@@ -37,8 +41,18 @@ HistoryTickLoader::~HistoryTickLoader() {
     duckdb_close(&_pimpl->db);
 }
 
-void HistoryTickLoader::Start() {
-    auto sql = std::format("SELECT code, epoch_ms(dt), open FROM '{}' WHERE code IN ({}) AND dt>={} AND dt<={}", _pimpl->cfg.ParquetPath, "rb2507", _pimpl->cfg.DateStart, _pimpl->cfg.DateEnd);
+void HistoryTickLoader::Subscribe(std::vector<std::string> const &symbols) {
+    auto view = std::views::join_with(symbols, "','");
+    std::string result;
+    result.resize(symbols.size() * 6 + 2);
+    result.push_back('\'');
+    result.append(view.begin(), view.end());
+    result.push_back('\'');
+    _pimpl->symbols_holder = std::move(result);
+}
+
+void HistoryTickLoader::Run() {
+    auto sql = std::format("SELECT code, epoch_ms(dt), open FROM '{}' WHERE code IN ({}) AND dt>={} AND dt<={}", _pimpl->cfg.ParquetPath, _pimpl->symbols_holder, _pimpl->cfg.DateStart, _pimpl->cfg.DateEnd);
     if (duckdb_query(_pimpl->conn, sql.data(), &_pimpl->result) != DuckDBSuccess) {
         duckdb_destroy_result(&_pimpl->result);
         return;
