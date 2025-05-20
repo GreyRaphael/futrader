@@ -141,5 +141,8 @@ void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMar
     tick.bv3 = pDepthMarketData->BidVolume3;
     tick.bv4 = pDepthMarketData->BidVolume4;
     tick.bv5 = pDepthMarketData->BidVolume5;
-    _channel_ptr->push(tick);
+
+    while (!_channel_ptr->push(tick)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }

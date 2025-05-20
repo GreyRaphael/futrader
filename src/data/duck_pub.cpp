@@ -4,6 +4,7 @@
 #include <cassert>
 #include <filesystem>
 #include <string_view>
+#include <thread>
 
 #include "config_parser.h"
 #include "duck_loader.h"
@@ -20,9 +21,12 @@ int main(int argc, char const* argv[]) {
     nng_listen(pub_sock, config.Address.data(), nullptr, 0);  // listener=NULL; flags=0 ignored
 
     auto channel_ptr = std::make_shared<TickDataChannel>();
-    HistoryTickLoader loader{config.BrokerFile, channel_ptr};
-    loader.Subscribe(config.Symbols);
-    loader.Run();
+
+    std::jthread loader{[channel_ptr, &config] {
+        HistoryTickLoader loader{config.BrokerFile, channel_ptr};
+        loader.Subscribe(config.Symbols);
+        loader.Run();
+    }};
 
     while (true) {
         auto value = channel_ptr->pop();

@@ -3,6 +3,7 @@
 #include <duckdb.h>
 
 #include <cassert>
+#include <chrono>
 #include <cstring>
 #include <filesystem>
 #include <format>
@@ -10,6 +11,7 @@
 #include <print>
 #include <ranges>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "config_parser.h"
@@ -139,7 +141,10 @@ void HistoryTickLoader::Run() {
         tick.presettle = duckdb_value_uint64(&_pimpl->result, 28, r) / 1e4;
         tick.settle = duckdb_value_uint64(&_pimpl->result, 29, r) / 1e4;
 
-        _channel_ptr->push(tick);
+        while (!_channel_ptr->push(tick)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
         // free memeory of string
         duckdb_free(code.data);
     }
