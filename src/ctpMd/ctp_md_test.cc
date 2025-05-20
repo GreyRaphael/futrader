@@ -14,7 +14,7 @@ TEST_CASE("openctp") {
     REQUIRE(std::filesystem::exists("errors.toml"));
     REQUIRE(std::filesystem::exists("tts/thostmduserapi_se.so"));
 
-    auto channel_ptr = std::make_shared<MarketDataChannel>();
+    auto channel_ptr = std::make_shared<TickDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
     md_cli.Start();
@@ -28,7 +28,7 @@ TEST_CASE("openctp") {
             continue;
         }
         // print_struct(&value);
-        std::println("{},{},{}", value->UpdateTime, value->InstrumentID, value->LastPrice);
+        std::println("{},{},{}", value->stamp, value->symbol, value->last);
     }
 }
 
@@ -38,7 +38,7 @@ TEST_CASE("ctp") {
     REQUIRE(std::filesystem::exists("errors.toml"));
     REQUIRE(std::filesystem::exists("ctp/thostmduserapi_se.so"));
 
-    auto channel_ptr = std::make_shared<MarketDataChannel>();
+    auto channel_ptr = std::make_shared<TickDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
     md_cli.Start();
@@ -52,6 +52,6 @@ TEST_CASE("ctp") {
             continue;
         }
         // print_struct(&value);
-        std::println("{},{},{}", value->UpdateTime, value->InstrumentID, value->LastPrice);
+        std::println("{},{},{}", value->stamp, value->symbol, value->last);
     }
 }

@@ -1,16 +1,25 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
+#include <spsc.hpp>
 #include <string_view>
+#include <vector>
+
+#include "quotetype.h"
+
+using TickDataChannel = lockfree::SPSC<TickData, 1024>;
+using TickDataChannelPtr = std::shared_ptr<TickDataChannel>;
 
 struct HistoryTickLoader {
-    HistoryTickLoader(const char* db_path);
+    HistoryTickLoader(std::string_view cfg_filename, TickDataChannelPtr channel_ptr);
     ~HistoryTickLoader();
+
+    void Subscribe(std::vector<std::string> const &symbols);
+    void Run();
 
    private:
     struct Impl;
-    std::unique_ptr<Impl> pImpl{};
+    std::unique_ptr<Impl> _pimpl{};
 
-    bool query(std::string_view symbol, int64_t dt_start, int64_t dt_end);
+    TickDataChannelPtr _channel_ptr;
 };

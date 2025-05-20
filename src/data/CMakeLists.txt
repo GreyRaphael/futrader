@@ -4,6 +4,8 @@ add_executable(nng_pub nng_pub.cpp)
 target_include_directories(duck_loader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # link 3rd duckdb so
 target_link_libraries(duck_loader PRIVATE duckdb)
+target_link_libraries(duck_loader PUBLIC parser)
+target_link_libraries(duck_loader PUBLIC channel)
 
 # publish CThostFtdcDepthMarketDataField to nng
 target_link_libraries(nng_pub PRIVATE ctp_md)
@@ -35,6 +37,13 @@ configure_file(
 configure_file(
     "${CMAKE_SOURCE_DIR}/config/nng.toml"
     "${CMAKE_CURRENT_BINARY_DIR}/nng.toml"
+    COPYONLY
+)
+
+# copy duckdb.toml
+configure_file(
+    "${CMAKE_SOURCE_DIR}/config/duckdb.toml"
+    "${CMAKE_CURRENT_BINARY_DIR}/duckdb.toml"
     COPYONLY
 )
 

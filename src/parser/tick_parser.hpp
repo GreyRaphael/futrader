@@ -8,7 +8,8 @@
 #include <format>
 #include <optional>
 #include <print>
-#include <sstream>
+#include <spanstream>
+#include <string_view>
 
 #include "ThostFtdcUserApiStruct.h"
 #include "quotetype.h"
@@ -18,6 +19,13 @@ auto floor_to_interval(std::chrono::time_point<Clock, Duration> tp, Duration int
     auto since = tp.time_since_epoch();
     auto rem = since % interval;
     return std::chrono::time_point<Clock, Duration>(since - rem);
+}
+
+inline auto str2tp(std::string_view dt_str, std::string_view fmt) {
+    std::ispanstream in{dt_str};
+    std::chrono::sys_seconds tp;
+    std::chrono::from_stream(in, fmt.data(), tp);
+    return tp;
 }
 
 inline void check_zoned_time(CThostFtdcDepthMarketDataField const* pDepthMarketData, int interval_seconds) {
@@ -51,9 +59,7 @@ struct BarGenerator {
     BarData process_tick(CThostFtdcDepthMarketDataField const* pDepthMarketData) {
         // TradingDay ? ActionDay ?
         auto dt_str = std::format("{} {}", pDepthMarketData->ActionDay, pDepthMarketData->UpdateTime);
-        std::istringstream in{dt_str};
-        std::chrono::sys_seconds tp_last;
-        std::chrono::from_stream(in, "%Y%m%d %H:%M:%S", tp_last);
+        auto tp_last = str2tp(dt_str, "%Y%m%d %H:%M:%S");
         auto tp_start = floor_to_interval(tp_last, std::chrono::seconds{_interval});
 
         auto stamp_last = (tp_last + std::chrono::milliseconds(pDepthMarketData->UpdateMillisec)).time_since_epoch().count();
@@ -64,7 +70,7 @@ struct BarGenerator {
             _last_bar_amt = pDepthMarketData->Turnover;
 
             _current = BarData{};
-            strcpy(_current->symbol, pDepthMarketData->InstrumentID);
+            strncpy(_current->symbol, pDepthMarketData->InstrumentID, 31);
             _current->stamp_start = stamp_start;
             _current->stamp_last = stamp_last;
             _current->open = pDepthMarketData->LastPrice,
@@ -84,7 +90,7 @@ struct BarGenerator {
             _last_bar_amt += _current->amount;
             // start new bar
             _current = BarData{};
-            strcpy(_current->symbol, pDepthMarketData->InstrumentID);
+            strncpy(_current->symbol, pDepthMarketData->InstrumentID, 31);
             _current->stamp_start = stamp_start;
             _current->stamp_last = stamp_last;
             _current->open = pDepthMarketData->LastPrice,

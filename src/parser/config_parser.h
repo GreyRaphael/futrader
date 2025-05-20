@@ -31,3 +31,11 @@ struct NngConfig {
 
     static NngConfig read_config(std::string_view filename);
 };
+
+struct DuckdbConfig {
+    std::string ParquetPath;
+    std::string DateStart;
+    std::string DateEnd;
+
+    static DuckdbConfig read_config(std::string_view filename);
+};

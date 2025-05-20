@@ -6,11 +6,13 @@
 #include <string>
 #include <vector>
 
-using MarketDataChannel = lockfree::SPSC<CThostFtdcDepthMarketDataField, 1024>;
-using MarketDataChannelPtr = std::shared_ptr<MarketDataChannel>;
+#include "quotetype.h"
+
+using TickDataChannel = lockfree::SPSC<TickData, 1024>;
+using TickDataChannelPtr = std::shared_ptr<TickDataChannel>;
 
 struct CtpMdClient : CThostFtdcMdSpi {
-    CtpMdClient(std::string_view cfg_filename, MarketDataChannelPtr channel_ptr);
+    CtpMdClient(std::string_view cfg_filename, TickDataChannelPtr channel_ptr);
     ~CtpMdClient();
 
     void Start();
@@ -30,5 +32,5 @@ struct CtpMdClient : CThostFtdcMdSpi {
 
     CThostFtdcMdApi *_api{};
     std::binary_semaphore _sem{0};
-    MarketDataChannelPtr _channel_ptr;
+    TickDataChannelPtr _channel_ptr;
 };
