@@ -1,5 +1,6 @@
 add_library(duck_loader duck_loader.cpp)
 add_executable(nng_pub nng_pub.cpp)
+add_executable(duck_pub duck_pub.cpp)
 
 target_include_directories(duck_loader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # link 3rd duckdb so
@@ -10,6 +11,10 @@ target_link_libraries(duck_loader PUBLIC channel)
 # publish CThostFtdcDepthMarketDataField to nng
 target_link_libraries(nng_pub PRIVATE ctp_md)
 target_link_libraries(nng_pub PRIVATE nng::nng)
+
+# publish duckdb struct to nng
+target_link_libraries(duck_pub PRIVATE duck_loader)
+target_link_libraries(duck_pub PRIVATE nng::nng)
 
 # copy *.so
 configure_file(

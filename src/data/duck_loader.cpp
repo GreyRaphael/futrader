@@ -42,19 +42,23 @@ HistoryTickLoader::~HistoryTickLoader() {
 }
 
 void HistoryTickLoader::Subscribe(std::vector<std::string> const &symbols) {
-    auto view = std::views::join_with(symbols, "','");
+    // mustn't use join_with(symbols, "','"); it join with `','\0`
+    auto view = std::views::join_with(symbols, std::string_view{"','"});
     std::string result;
-    result.resize(symbols.size() * 6 + 2);
+    result.reserve(symbols.size() * 6 + 2);
     result.push_back('\'');
+    // result.append("'"); // alternative
     result.append(view.begin(), view.end());
     result.push_back('\'');
     _pimpl->symbols_holder = std::move(result);
 }
 
 void HistoryTickLoader::Run() {
-    auto sql = std::format("SELECT code, epoch_ms(dt), open FROM '{}' WHERE code IN ({}) AND dt>={} AND dt<={}", _pimpl->cfg.ParquetPath, _pimpl->symbols_holder, _pimpl->cfg.DateStart, _pimpl->cfg.DateEnd);
+    auto sql = std::format("SELECT code, epoch_ms(dt), last FROM '{}' WHERE code IN ({}) AND dt>='{}' AND dt<='{}';", _pimpl->cfg.ParquetPath, _pimpl->symbols_holder, _pimpl->cfg.DateStart, _pimpl->cfg.DateEnd);
+    std::println("sql={}", sql);
     if (duckdb_query(_pimpl->conn, sql.data(), &_pimpl->result) != DuckDBSuccess) {
         duckdb_destroy_result(&_pimpl->result);
+        std::println("query error");
         return;
     }
 
@@ -63,11 +67,12 @@ void HistoryTickLoader::Run() {
     for (auto r = 0; r < rows; r++) {
         TickData tick{};
         auto code = duckdb_value_string(&_pimpl->result, 0, r);
-        auto open = duckdb_value_double(&_pimpl->result, 2, r);
+        auto last = duckdb_value_double(&_pimpl->result, 2, r);
         strncpy(tick.symbol, code.data, code.size);
         tick.stamp = duckdb_value_int64(&_pimpl->result, 1, r);
-        tick.open = duckdb_value_double(&_pimpl->result, 2, r);
+        tick.last = duckdb_value_double(&_pimpl->result, 2, r);
 
+        _channel_ptr->push(tick);
         // free memeory of string
         duckdb_free(code.data);
     }
