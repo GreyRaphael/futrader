@@ -24,8 +24,8 @@ struct TickData {
     double open;
     double high;
     double low;
-    double close;
     double last;
+    double close;
     double settle;
     double limit_up;
     double limit_down;
