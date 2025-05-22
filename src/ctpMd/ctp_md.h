@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "QuoteType.h"
+#include "quote_type.h"
 
 using TickDataChannel = lockfree::SPSC<TickData, 1024>;
 using TickDataChannelPtr = std::shared_ptr<TickDataChannel>;

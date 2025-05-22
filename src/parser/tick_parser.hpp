@@ -12,7 +12,7 @@
 #include <string_view>
 
 #include "ThostFtdcUserApiStruct.h"
-#include "QuoteType.h"
+#include "quote_type.h"
 
 template <typename Clock, typename Duration>
 auto floor_to_interval(std::chrono::time_point<Clock, Duration> tp, Duration interval) {

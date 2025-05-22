@@ -2,6 +2,6 @@
 
 struct IQuoteProvider {
     virtual ~IQuoteProvider() = default;
-    virtual void Start() = 0;
-    virtual void Subscribe() = 0;
+    virtual void start() = 0;
+    virtual void subscribe() = 0;
 };
