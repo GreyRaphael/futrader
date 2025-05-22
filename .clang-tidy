@@ -10,16 +10,12 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.StructCase
     value: CamelCase
-  # functions & methods
+  # functions
   - key: readability-identifier-naming.FunctionCase
     value: camelBack
-  - key: readability-identifier-naming.MethodCase
-    value: camelBack
-  # parameters & members
-  - key: readability-identifier-naming.ParameterCase
-    value: lower_case
-  - key: readability-identifier-naming.MemberCase
-    value: lower_case
+  # parameters
+  # - key: readability-identifier-naming.ParameterCase
+  #  value: lower_case
   # statics & globals
   - key: readability-identifier-naming.StaticMemberCase
     value: lower_case
@@ -32,3 +28,37 @@ CheckOptions:
   # constants
   - key: readability-identifier-naming.ConstantCase
     value: UPPER_CASE
+  # private members: lower_case + leading underscore
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: '_'
+
+  # protected members: lower_case + leading underscore (optional)
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ProtectedMemberPrefix
+    value: '_'
+
+  # public members: lower_case, no prefix
+  - key: readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PublicMemberPrefix
+    value: ''
+  # private methods: camelBack + leading underscore
+  - key: readability-identifier-naming.PrivateMethodCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMethodPrefix
+    value: '_'
+
+  # protected methods (optional): camelBack + leading underscore
+  - key: readability-identifier-naming.ProtectedMethodCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMethodPrefix
+    value: '_'
+
+  # public methods: camelBack, no prefix
+  - key: readability-identifier-naming.PublicMethodCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMethodPrefix
+    value: ''
