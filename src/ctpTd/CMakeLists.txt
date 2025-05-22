@@ -1,7 +1,7 @@
 add_library(ctp_td ctp_td.cpp)
 
 # only use ctp headers
-target_include_directories(ctp_td PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME})
+target_include_directories(ctp_td PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp)
 # public current library headers
 target_include_directories(ctp_td PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # use dylib
@@ -17,14 +17,14 @@ if(BUILD_TESTING)
     # copy *.so
     configure_file(
         # input
-        "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thosttraderapi_se.so"
+        "${CMAKE_SOURCE_DIR}/third_party/ctp/thosttraderapi_se.so"
         # output
         "${CMAKE_CURRENT_BINARY_DIR}/ctp/thosttraderapi_se.so"
         # mode
         COPYONLY
     )
     configure_file(
-        "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}/thosttraderapi_se.so"
+        "${CMAKE_SOURCE_DIR}/third_party/tts/thosttraderapi_se.so"
         "${CMAKE_CURRENT_BINARY_DIR}/tts/thosttraderapi_se.so"
         COPYONLY
     )

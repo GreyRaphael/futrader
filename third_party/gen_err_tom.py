@@ -3,7 +3,7 @@ import re
 
 if __name__ == "__main__":
     pat = re.compile(r'value="(\d+)" prompt="(.+?)"/>')
-    with open("./ctp/Linux/error.xml") as fin:
+    with open("./ctp/error.xml") as fin:
         txt = fin.read()
 
     result = pat.findall(txt)

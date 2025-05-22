@@ -16,26 +16,32 @@ find_package(nng CONFIG REQUIRED)
 
 add_library(duckdb SHARED IMPORTED)
 set_target_properties(duckdb PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/duckdb/${CMAKE_SYSTEM_NAME}/libduckdb.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/duckdb/${CMAKE_SYSTEM_NAME}"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/duckdb/libduckdb.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/duckdb"
 )
 
 add_library(ctp_mdapi SHARED IMPORTED)
 set_target_properties(ctp_mdapi PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/thostmduserapi_se.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp"
 )
 
 add_library(ctp_tdapi SHARED IMPORTED)
 set_target_properties(ctp_tdapi PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thosttraderapi_se.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/thosttraderapi_se.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp"
 )
 
 add_library(tts_mdapi SHARED IMPORTED)
 set_target_properties(tts_mdapi PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}"
+IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/tts/thostmduserapi_se.so"
+INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/tts"
+)
+
+add_library(tts_tdapi SHARED IMPORTED)
+set_target_properties(tts_tdapi PROPERTIES
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/tts/thosttraderapi_se.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/tts"
 )
 
 include(CTest)
