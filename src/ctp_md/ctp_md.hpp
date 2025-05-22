@@ -128,18 +128,17 @@ void CtpMdClient<CB>::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDept
     tick.high = pDepthMarketData->HighestPrice;
     tick.low = pDepthMarketData->LowestPrice;
     tick.last = pDepthMarketData->LastPrice;
-    tick.close = pDepthMarketData->ClosePrice;
-    tick.settle = pDepthMarketData->SettlementPrice;
     tick.limit_up = pDepthMarketData->UpperLimitPrice;
     tick.limit_down = pDepthMarketData->LowerLimitPrice;
+    tick.close = pDepthMarketData->ClosePrice;
     tick.preclose = pDepthMarketData->PreClosePrice;
+    tick.settle = pDepthMarketData->SettlementPrice;
     tick.presettle = pDepthMarketData->PreSettlementPrice;
-    tick.volume = pDepthMarketData->Volume;
-    tick.amount = pDepthMarketData->Turnover;
     tick.oi = pDepthMarketData->OpenInterest;
     tick.preoi = pDepthMarketData->PreOpenInterest;
+    tick.volume = pDepthMarketData->Volume;
+    tick.amount = pDepthMarketData->Turnover;
     tick.avgprice = pDepthMarketData->AveragePrice;
-    tick.adj = 1.0;  // todo
     tick.ap1 = pDepthMarketData->AskPrice1;
     tick.ap2 = pDepthMarketData->AskPrice2;
     tick.ap3 = pDepthMarketData->AskPrice3;
@@ -160,6 +159,7 @@ void CtpMdClient<CB>::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDept
     tick.bv3 = pDepthMarketData->BidVolume3;
     tick.bv4 = pDepthMarketData->BidVolume4;
     tick.bv5 = pDepthMarketData->BidVolume5;
+    tick.adj = 1.0;  // todo
 
     _callback(tick);
 }
