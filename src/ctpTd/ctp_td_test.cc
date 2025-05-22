@@ -6,8 +6,8 @@
 
 #include "ctp_td.h"
 
-TEST_CASE("openctp") {
-    std::string_view cfg_filename{"openctp.toml"};
+TEST_CASE("tts") {
+    std::string_view cfg_filename{"tts.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
     REQUIRE(std::filesystem::exists("errors.toml"));
     REQUIRE(std::filesystem::exists("tts/thosttraderapi_se.so"));

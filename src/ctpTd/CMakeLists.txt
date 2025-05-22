@@ -24,7 +24,7 @@ if(BUILD_TESTING)
         COPYONLY
     )
     configure_file(
-        "${CMAKE_SOURCE_DIR}/third_party/openctp/lin64/thosttraderapi_se.so"
+        "${CMAKE_SOURCE_DIR}/third_party/tts/lin64/thosttraderapi_se.so"
         "${CMAKE_CURRENT_BINARY_DIR}/tts/thosttraderapi_se.so"
         COPYONLY
     )

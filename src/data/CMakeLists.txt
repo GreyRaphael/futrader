@@ -26,7 +26,7 @@ configure_file(
     COPYONLY
 )
 configure_file(
-    "${CMAKE_SOURCE_DIR}/third_party/openctp/lin64/thostmduserapi_se.so"
+    "${CMAKE_SOURCE_DIR}/third_party/tts/lin64/thostmduserapi_se.so"
     "${CMAKE_CURRENT_BINARY_DIR}/tts/thostmduserapi_se.so"
     COPYONLY
 )

@@ -1,4 +1,4 @@
 Address = "ipc:///tmp/pubsub.ipc"
 PollIntervalMs = 10
-BrokerFile = "openctp.toml"
+BrokerFile = "tts.toml"
 Symbols = ["MA509", "rb2507"]

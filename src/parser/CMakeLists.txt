@@ -24,8 +24,8 @@ if(BUILD_TESTING)
         COPYONLY
     )
     configure_file(
-        "${CMAKE_SOURCE_DIR}/config/brokers/openctp.toml"
-        "${CMAKE_CURRENT_BINARY_DIR}/openctp.toml"
+        "${CMAKE_SOURCE_DIR}/config/brokers/tts.toml"
+        "${CMAKE_CURRENT_BINARY_DIR}/tts.toml"
         COPYONLY
     )
 
