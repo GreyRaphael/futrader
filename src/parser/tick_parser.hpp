@@ -125,7 +125,7 @@ struct BarGenerator {
 };
 
 struct TimeStampCalculator {
-    int64_t compute(const char* action_day, const char* update_time, int millisec) {
+    int64_t compute(const char* action_day, const char* update_time, int millisec = 0) {
         auto day = sv2int(action_day).value_or(0);
         if (day != _cached_day) {
             _cached_day = day;
