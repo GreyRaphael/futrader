@@ -12,7 +12,7 @@
 #include <optional>
 #include <print>
 
-#include "quotetype.h"
+#include "QuoteType.h"
 #include "tick_parser.hpp"
 
 struct CtpMdClient::Impl {

@@ -7,7 +7,7 @@
 
 #include "config_parser.h"
 #include "ctp_md.h"
-#include "quotetype.h"
+#include "QuoteType.h"
 #include "struct_parser.hpp"
 
 int main(int argc, char const* argv[]) {

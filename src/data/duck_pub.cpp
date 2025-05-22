@@ -8,7 +8,7 @@
 
 #include "config_parser.h"
 #include "duck_loader.h"
-#include "quotetype.h"
+#include "QuoteType.h"
 #include "struct_parser.hpp"
 
 int main(int argc, char const* argv[]) {

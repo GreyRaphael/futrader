@@ -15,7 +15,7 @@
 #include <utility>
 
 #include "config_parser.h"
-#include "quotetype.h"
+#include "QuoteType.h"
 
 struct HistoryTickLoader::Impl {
     DuckdbConfig cfg{};
