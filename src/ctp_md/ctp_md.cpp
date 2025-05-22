@@ -1,17 +1,16 @@
 #include "ctp_md.h"
 
-#include <config_parser.h>
-
 #include <cassert>
 #include <cstring>
 #include <dylib.hpp>
-#include <error_parser.hpp>
 #include <filesystem>
 #include <format>
 #include <memory>
 #include <optional>
 #include <print>
 
+#include "config_parser.h"
+#include "error_parser.hpp"
 #include "quote_type.h"
 #include "tick_parser.hpp"
 
@@ -20,10 +19,11 @@ struct CtpMdClient::Impl {
     // after invoked, dylib will unload the dll, so must set to field variable
     // dylib doesn't have a default constructor, so use std::optional or std::unique_ptr
     std::optional<dylib> lib{};
+    std::vector<char *> symbol_ptrs{};
 };
 
-CtpMdClient::CtpMdClient(std::string_view cfg_filename, TickDataChannelPtr channel_ptr)
-    : _pimpl(std::make_unique<Impl>()), _channel_ptr(channel_ptr) {
+CtpMdClient::CtpMdClient(std::string_view cfg_filename)
+    : _pimpl(std::make_unique<Impl>()) {
     // assert broker.toml exist
     assert(std::filesystem::exists(cfg_filename));
     assert(std::filesystem::exists("errors.toml"));
@@ -33,9 +33,18 @@ CtpMdClient::CtpMdClient(std::string_view cfg_filename, TickDataChannelPtr chann
     assert(std::filesystem::exists(_pimpl->cfg.Interface));
 }
 
-CtpMdClient::~CtpMdClient() { _api->Release(); }
+void CtpMdClient::setCallback(std::function<void(const TickData &)> callback) {
+    _callback = callback;
+}
 
-void CtpMdClient::Start() {
+void CtpMdClient::subscribe(std::vector<std::string> const &symbols) {
+    _pimpl->symbol_ptrs.reserve(256);
+    for (auto &e : symbols) {
+        _pimpl->symbol_ptrs.push_back(const_cast<char *>(e.data()));
+    }
+}
+
+void CtpMdClient::start() {
     // load dylib
     auto dylib_path = std::filesystem::path{_pimpl->cfg.Interface};
     // inplace-construct the dylib inside the optional
@@ -46,7 +55,8 @@ void CtpMdClient::Start() {
     auto CreateFtdcMdApi = _pimpl->lib->get_function<CThostFtdcMdApi *(const char *, const bool, const bool)>("_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb");
 
     // register
-    _api = CreateFtdcMdApi("", false, false);
+    // _api = CreateFtdcMdApi("", false, false);
+    _api.reset(CreateFtdcMdApi("", false, false));
     _api->RegisterSpi(this);
     _api->RegisterFront(_pimpl->cfg.Front.data());
 
@@ -58,6 +68,10 @@ void CtpMdClient::Start() {
     CThostFtdcReqUserLoginField req{};
     _pimpl->cfg.UserID.copy(req.UserID, _pimpl->cfg.UserID.length());
     _api->ReqUserLogin(&req, 1);
+    _sem.acquire();
+
+    // subscribe
+    _api->SubscribeMarketData(_pimpl->symbol_ptrs.data(), _pimpl->symbol_ptrs.size());
     _sem.acquire();
 }
 
@@ -80,26 +94,13 @@ void CtpMdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CTh
     if (bIsLast) _sem.release();
 };
 
-void CtpMdClient::Subscribe(std::vector<std::string> const &symbols) {
-    std::vector<char *> symbol_ptrs;
-    symbol_ptrs.reserve(256);
-    for (auto &e : symbols) {
-        symbol_ptrs.push_back(const_cast<char *>(e.data()));
-    }
-    _api->SubscribeMarketData(symbol_ptrs.data(), symbol_ptrs.size());
-    _sem.acquire();
-}
-
 void CtpMdClient::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pSpecificInstrument, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
 
-void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
-    // print_struct(pDepthMarketData);
-    // _channel_ptr->push(*pDepthMarketData);
-
+TickData toUniversalFormat(CThostFtdcDepthMarketDataField *pDepthMarketData) {
     TickData tick{};
     strncpy(tick.symbol, pDepthMarketData->InstrumentID, 31);
     auto dt_str = std::format("{} {}", pDepthMarketData->ActionDay, pDepthMarketData->UpdateTime);
@@ -112,7 +113,7 @@ void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMar
     tick.close = pDepthMarketData->ClosePrice;
     tick.settle = pDepthMarketData->SettlementPrice;
     tick.limit_up = pDepthMarketData->UpperLimitPrice;
-    tick.limit_down = pDepthMarketData->UpperLimitPrice;
+    tick.limit_down = pDepthMarketData->LowerLimitPrice;
     tick.preclose = pDepthMarketData->PreClosePrice;
     tick.presettle = pDepthMarketData->PreSettlementPrice;
     tick.volume = pDepthMarketData->Volume;
@@ -141,8 +142,11 @@ void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMar
     tick.bv3 = pDepthMarketData->BidVolume3;
     tick.bv4 = pDepthMarketData->BidVolume4;
     tick.bv5 = pDepthMarketData->BidVolume5;
+    return tick;
+}
 
-    while (!_channel_ptr->push(tick)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+void CtpMdClient::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
+    // print_struct(pDepthMarketData);
+    auto tick = toUniversalFormat(pDepthMarketData);
+    _callback(tick);
 }

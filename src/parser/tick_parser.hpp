@@ -3,6 +3,7 @@
 #include <sys/syscall.h>
 
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <format>
@@ -13,6 +14,7 @@
 
 #include "ThostFtdcUserApiStruct.h"
 #include "quote_type.h"
+#include "string_parser.hpp"
 
 template <typename Clock, typename Duration>
 auto floor_to_interval(std::chrono::time_point<Clock, Duration> tp, Duration interval) {
@@ -120,4 +122,27 @@ struct BarGenerator {
     std::optional<BarData> _current{};
     double _last_bar_vol{};
     double _last_bar_amt{};
+};
+
+struct TimeStampCalculator {
+    int64_t compute(const char* action_day, const char* update_time, int millisec) {
+        auto day = sv2int(action_day).value_or(0);
+        if (day != _cached_day) {
+            _cached_day = day;
+            auto y = (action_day[0] - '0') * 1000 + (action_day[1] - '0') * 100 + (action_day[2] - '0') * 10 + (action_day[3] - '0');
+            uint32_t m = (action_day[4] - '0') * 10 + (action_day[5] - '0');
+            uint32_t d = (action_day[6] - '0') * 10 + (action_day[7] - '0');
+            std::chrono::year_month_day ymd{std::chrono::year{y}, std::chrono::month{m}, std::chrono::day{d}};
+            _cached_day_epoch = std::chrono::sys_days{ymd};
+        }
+        int h = (update_time[0] - '0') * 10 + (update_time[1] - '0');
+        int mi = (update_time[3] - '0') * 10 + (update_time[4] - '0');
+        int s = (update_time[6] - '0') * 10 + (update_time[7] - '0');
+        auto tp = _cached_day_epoch + std::chrono::hours{h} + std::chrono::minutes{mi} + std::chrono::seconds{s} + std::chrono::milliseconds{millisec};
+        return tp.time_since_epoch().count();
+    }
+
+   private:
+    std::chrono::sys_days _cached_day_epoch{};
+    int _cached_day{0};
 };

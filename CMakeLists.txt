@@ -28,4 +28,4 @@ add_subdirectory(src/channel channel)
 
 add_subdirectory(src/ctp_md ctp_md)
 add_subdirectory(src/ctp_td ctp_td)
-add_subdirectory(src/data data)
+# add_subdirectory(src/data data)

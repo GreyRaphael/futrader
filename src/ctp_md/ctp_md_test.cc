@@ -17,8 +17,8 @@ TEST_CASE("tts") {
     auto channel_ptr = std::make_shared<TickDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
-    md_cli.Start();
-    md_cli.Subscribe({"MA509", "rb2507"});
+    md_cli.start();
+    md_cli.subscribe({"MA509", "rb2507"});
 
     while (true) {
         auto value = channel_ptr->pop();
@@ -41,8 +41,8 @@ TEST_CASE("ctp") {
     auto channel_ptr = std::make_shared<TickDataChannel>();
 
     CtpMdClient md_cli{cfg_filename, channel_ptr};
-    md_cli.Start();
-    md_cli.Subscribe({"MA509", "rb2507"});
+    md_cli.start();
+    md_cli.subscribe({"MA509", "rb2507"});
 
     while (true) {
         auto value = channel_ptr->pop();

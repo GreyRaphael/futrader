@@ -1,22 +1,26 @@
 #include <ThostFtdcMdApi.h>
 
+#include <functional>
 #include <memory>
 #include <semaphore>
-#include <spsc.hpp>
 #include <string>
 #include <vector>
 
 #include "quote_type.h"
 
-using TickDataChannel = lockfree::SPSC<TickData, 1024>;
-using TickDataChannelPtr = std::shared_ptr<TickDataChannel>;
+struct MdApiReleaser {
+    void operator()(CThostFtdcMdApi *p) const noexcept {
+        if (p) p->Release();  // or whatever the correct destroy call is
+    }
+};
 
 struct CtpMdClient : CThostFtdcMdSpi {
-    CtpMdClient(std::string_view cfg_filename, TickDataChannelPtr channel_ptr);
-    ~CtpMdClient();
+    CtpMdClient(std::string_view cfg_filename);
+    ~CtpMdClient() = default;
 
-    void Start();
-    void Subscribe(std::vector<std::string> const &symbols);
+    void setCallback(std::function<void(const TickData &)> callback);
+    void subscribe(std::vector<std::string> const &symbols);
+    void start();
 
    private:
     void OnFrontConnected() override;
@@ -30,7 +34,7 @@ struct CtpMdClient : CThostFtdcMdSpi {
     struct Impl;
     std::unique_ptr<Impl> _pimpl{};
 
-    CThostFtdcMdApi *_api{};
+    std::unique_ptr<CThostFtdcMdApi, MdApiReleaser> _api{};
     std::binary_semaphore _sem{0};
-    TickDataChannelPtr _channel_ptr;
+    std::function<void(const TickData &)> _callback{};
 };

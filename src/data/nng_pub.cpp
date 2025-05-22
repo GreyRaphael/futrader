@@ -21,8 +21,8 @@ int main(int argc, char const* argv[]) {
 
     auto channel_ptr = std::make_shared<TickDataChannel>();
     CtpMdClient md_cli{config.BrokerFile, channel_ptr};
-    md_cli.Start();
-    md_cli.Subscribe(config.Symbols);
+    md_cli.start();
+    md_cli.subscribe(config.Symbols);
 
     while (true) {
         auto value = channel_ptr->pop();
