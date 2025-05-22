@@ -1,7 +1,7 @@
 add_library(ctp_md ctp_md.cpp)
 
 # just use ctp headers
-target_include_directories(ctp_md PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp/lin64)
+target_include_directories(ctp_md PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME})
 # public current library headers
 target_include_directories(ctp_md PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # use dylib
@@ -19,14 +19,14 @@ if(BUILD_TESTING)
     # copy *.so
     configure_file(
         # input
-        "${CMAKE_SOURCE_DIR}/third_party/ctp/lin64/thostmduserapi_se.so"
+        "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
         # output
         "${CMAKE_CURRENT_BINARY_DIR}/ctp/thostmduserapi_se.so"
         # mode
         COPYONLY
     )
     configure_file(
-        "${CMAKE_SOURCE_DIR}/third_party/tts/lin64/thostmduserapi_se.so"
+        "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
         "${CMAKE_CURRENT_BINARY_DIR}/tts/thostmduserapi_se.so"
         COPYONLY
     )

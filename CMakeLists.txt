@@ -16,32 +16,27 @@ find_package(nng CONFIG REQUIRED)
 
 add_library(duckdb SHARED IMPORTED)
 set_target_properties(duckdb PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/duckdb/lin64/libduckdb.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/duckdb/lin64"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/duckdb/${CMAKE_SYSTEM_NAME}/libduckdb.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/duckdb/${CMAKE_SYSTEM_NAME}"
 )
 
 add_library(ctp_mdapi SHARED IMPORTED)
 set_target_properties(ctp_mdapi PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/lin64/thostmduserapi_se.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp/lin64"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}"
 )
 
 add_library(ctp_tdapi SHARED IMPORTED)
 set_target_properties(ctp_tdapi PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/lin64/thosttraderapi_se.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp/lin64"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thosttraderapi_se.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}"
 )
 
 add_library(tts_mdapi SHARED IMPORTED)
 set_target_properties(tts_mdapi PROPERTIES
-  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/tts/lin64/thostmduserapi_se.so"
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/tts/lin64"
+  IMPORTED_LOCATION             "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}"
 )
-
-message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "Host System Name: ${CMAKE_HOST_SYSTEM_NAME}")
-message(STATUS "System Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "Host System Processor: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 
 include(CTest)
 # binary path is second param, so it go to build/parser

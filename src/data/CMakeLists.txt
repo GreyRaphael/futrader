@@ -19,14 +19,14 @@ target_link_libraries(duck_pub PRIVATE nng::nng)
 # copy *.so
 configure_file(
     # input
-    "${CMAKE_SOURCE_DIR}/third_party/ctp/lin64/thostmduserapi_se.so"
+    "${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
     # output
     "${CMAKE_CURRENT_BINARY_DIR}/ctp/thostmduserapi_se.so"
     # mode
     COPYONLY
 )
 configure_file(
-    "${CMAKE_SOURCE_DIR}/third_party/tts/lin64/thostmduserapi_se.so"
+    "${CMAKE_SOURCE_DIR}/third_party/tts/${CMAKE_SYSTEM_NAME}/thostmduserapi_se.so"
     "${CMAKE_CURRENT_BINARY_DIR}/tts/thostmduserapi_se.so"
     COPYONLY
 )

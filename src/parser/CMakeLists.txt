@@ -8,7 +8,7 @@ target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party)
 target_link_libraries(parser PRIVATE tomlplusplus::tomlplusplus)
 target_include_directories(parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # use ctp headers
-target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp/lin64)
+target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/third_party/ctp/${CMAKE_SYSTEM_NAME})
 target_include_directories(parser PUBLIC ${CMAKE_SOURCE_DIR}/src/common)
 
 if(BUILD_TESTING)
