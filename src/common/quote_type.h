@@ -8,21 +8,21 @@ struct BarData {
     symbol_t symbol;
     int64_t stamp_start, stamp_last;
     double open, high, low, close;
-    int64_t volume, oi;
-    double amount;
+    int64_t volume;
+    double amount, oi;
     double adj;
 };
 
 struct TickData {
     symbol_t symbol;
     int64_t stamp;
-    double open, high, low, last, close, preclose;
+    double open, high, low, last;
     double limit_up, limit_down;
+    double close, preclose;
     double settle, presettle;
-    int64_t volume;
     double oi, preoi;
-    double amount;
-    double avgprice;
+    int64_t volume;
+    double amount, avgprice;
     double ap1, ap2, ap3, ap4, ap5;
     double bp1, bp2, bp3, bp4, bp5;
     int av1, av2, av3, av4, av5;
