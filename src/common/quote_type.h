@@ -17,10 +17,10 @@ struct TickData {
     symbol_t symbol;
     int64_t stamp;
     double open, high, low, last;
-    double limit_up, limit_down;
-    double close, preclose;
-    double settle, presettle;
-    double oi, preoi;
+    double limit_down, limit_up;
+    double preclose, close;
+    double presettle, settle;
+    double preoi, oi;
     int64_t volume;
     double amount, avgprice;
     double ap1, ap2, ap3, ap4, ap5;

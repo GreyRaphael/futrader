@@ -40,12 +40,12 @@ struct CtpMdClient : CThostFtdcMdSpi {
     void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) override;
 
     CtpConfig _cfg{};
-    std::optional<dylib> _lib{};
-    CThostFtdcMdApi *_api{};
-    std::binary_semaphore _sem{0};
     CB _callback{};
     // after invoked, dylib will unload the dll, so must set to field variable
     // dylib doesn't have a default constructor, so use std::optional or std::unique_ptr
+    std::optional<dylib> _lib{};
+    CThostFtdcMdApi *_api{};
+    std::binary_semaphore _sem{0};
     std::vector<std::string> _symbols;
     TimeStampCalculator _stamp_calculator{};
 };
@@ -120,22 +120,23 @@ void CtpMdClient<CB>::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpe
 template <typename CB>
 void CtpMdClient<CB>::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {
     // print_struct(pDepthMarketData);
-    // auto tick = toUniversalFormat(pDepthMarketData);
+
     TickData tick{};
     memcpy(tick.symbol, pDepthMarketData->InstrumentID, 31);
+    // ActionDay or TradingDay?
     tick.stamp = _stamp_calculator.compute(pDepthMarketData->ActionDay, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
     tick.open = pDepthMarketData->OpenPrice;
     tick.high = pDepthMarketData->HighestPrice;
     tick.low = pDepthMarketData->LowestPrice;
     tick.last = pDepthMarketData->LastPrice;
-    tick.limit_up = pDepthMarketData->UpperLimitPrice;
     tick.limit_down = pDepthMarketData->LowerLimitPrice;
-    tick.close = pDepthMarketData->ClosePrice;
+    tick.limit_up = pDepthMarketData->UpperLimitPrice;
     tick.preclose = pDepthMarketData->PreClosePrice;
-    tick.settle = pDepthMarketData->SettlementPrice;
+    tick.close = pDepthMarketData->ClosePrice;
     tick.presettle = pDepthMarketData->PreSettlementPrice;
-    tick.oi = pDepthMarketData->OpenInterest;
+    tick.settle = pDepthMarketData->SettlementPrice;
     tick.preoi = pDepthMarketData->PreOpenInterest;
+    tick.oi = pDepthMarketData->OpenInterest;
     tick.volume = pDepthMarketData->Volume;
     tick.amount = pDepthMarketData->Turnover;
     tick.avgprice = pDepthMarketData->AveragePrice;
