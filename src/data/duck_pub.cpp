@@ -14,17 +14,17 @@
 int main(int argc, char const* argv[]) {
     std::string_view cfg_filename = "nng.toml";
     assert(std::filesystem::exists(cfg_filename));
-    auto config = NngConfig::read_config(cfg_filename);
+    auto config = NngConfig::readConfig(cfg_filename);
 
     nng_socket pub_sock{};
     nng_pub0_open(&pub_sock);
-    nng_listen(pub_sock, config.Address.data(), nullptr, 0);  // listener=NULL; flags=0 ignored
+    nng_listen(pub_sock, config.address.data(), nullptr, 0);  // listener=NULL; flags=0 ignored
 
     auto channel_ptr = std::make_shared<TickDataChannel>();
 
     std::jthread loader{[channel_ptr, &config] {
-        HistoryTickLoader loader{config.BrokerFile, channel_ptr};
-        loader.Subscribe(config.Symbols);
+        HistoryTickLoader loader{config.broker_file, channel_ptr};
+        loader.Subscribe(config.symbols);
         loader.Run();
     }};
 
@@ -33,7 +33,7 @@ int main(int argc, char const* argv[]) {
 
         if (!value) {
             // sleep time in ms
-            nng_msleep(config.PollIntervalMs);
+            nng_msleep(config.poll_interval_ms);
             continue;
         }
         print_struct(&value.value());

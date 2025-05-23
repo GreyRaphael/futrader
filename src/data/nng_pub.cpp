@@ -13,23 +13,23 @@
 int main(int argc, char const* argv[]) {
     std::string_view cfg_filename = "nng.toml";
     assert(std::filesystem::exists(cfg_filename));
-    auto config = NngConfig::read_config(cfg_filename);
+    auto config = NngConfig::readConfig(cfg_filename);
 
     nng_socket pub_sock{};
     nng_pub0_open(&pub_sock);
-    nng_listen(pub_sock, config.Address.data(), nullptr, 0);  // listener=NULL; flags=0 ignored
+    nng_listen(pub_sock, config.address.data(), nullptr, 0);  // listener=NULL; flags=0 ignored
 
     auto channel_ptr = std::make_shared<TickDataChannel>();
-    CtpMdClient md_cli{config.BrokerFile, channel_ptr};
+    CtpMdClient md_cli{config.broker_file, channel_ptr};
     md_cli.start();
-    md_cli.subscribe(config.Symbols);
+    md_cli.subscribe(config.symbols);
 
     while (true) {
         auto value = channel_ptr->pop();
 
         if (!value) {
             // sleep time in ms
-            nng_msleep(config.PollIntervalMs);
+            nng_msleep(config.poll_interval_ms);
             continue;
         }
         print_struct(&value.value());
