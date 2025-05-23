@@ -1,14 +1,13 @@
-# prebuilt not like lockfree::SPSC(only as header-only)
-add_library(ctp_md ctp_md.hpp)
+add_library(ctp_md INTERFACE)
 
 # public current library headers
-target_include_directories(ctp_md PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ctp_md INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 # just use ctp headers
-target_include_directories(ctp_md PRIVATE ${CMAKE_SOURCE_DIR}/third_party/ctp)
+target_include_directories(ctp_md INTERFACE ${CMAKE_SOURCE_DIR}/third_party/ctp)
 # use dylib
-target_include_directories(ctp_md PRIVATE ${DYLIB_INCLUDE_DIRS})
+target_include_directories(ctp_md INTERFACE ${DYLIB_INCLUDE_DIRS})
 # use parsers
-target_link_libraries(ctp_md PUBLIC parser)
+target_link_libraries(ctp_md INTERFACE parser)
 
 if(BUILD_TESTING)
     add_executable(ctp_md_test ctp_md_test.cc)
