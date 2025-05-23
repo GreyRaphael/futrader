@@ -24,12 +24,12 @@ struct BtConfig {
 };
 
 struct NngConfig {
-    std::string Address;
-    int PollIntervalMs;
-    std::string BrokerFile;
-    std::vector<std::string> Symbols;
+    std::string address;
+    int poll_interval_ms;
+    std::string broker_file;
+    std::vector<std::string> symbols;
 
-    static NngConfig read_config(std::string_view filename);
+    static NngConfig readConfig(std::string_view filename);
 };
 
 struct DuckdbConfig {

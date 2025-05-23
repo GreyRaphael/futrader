@@ -57,9 +57,9 @@ TEST_CASE("testing nng.toml") {
     std::string_view filename{"nng.toml"};
     REQUIRE(std::filesystem::exists(filename));
 
-    auto nng_config = NngConfig::read_config(filename);
-    CHECK_EQ(nng_config.Address, "ipc:///tmp/pubsub.ipc");
-    CHECK_EQ(nng_config.BrokerFile, "tts.toml");
-    CHECK_EQ(nng_config.Symbols[0], "MA509");
-    CHECK_EQ(nng_config.Symbols[1], "rb2507");
+    auto nng_config = NngConfig::readConfig(filename);
+    CHECK_EQ(nng_config.address, "ipc:///tmp/pubsub.ipc");
+    CHECK_EQ(nng_config.broker_file, "tts.toml");
+    CHECK_EQ(nng_config.symbols[0], "MA509");
+    CHECK_EQ(nng_config.symbols[1], "rb2507");
 }

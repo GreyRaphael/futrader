@@ -30,16 +30,16 @@ BtConfig BtConfig::readConfig(std::string_view filename) {
     return cfg;
 }
 
-NngConfig NngConfig::read_config(std::string_view filename) {
+NngConfig NngConfig::readConfig(std::string_view filename) {
     auto config = toml::parse_file(filename);
 
     NngConfig cfg{};
-    cfg.Address = config["Address"].value_or("ipc:///tmp/pubsub.ipc");
-    cfg.BrokerFile = config["BrokerFile"].value_or("tts.toml");
-    cfg.PollIntervalMs = config["PollIntervalMs"].value_or(0);
+    cfg.address = config["Address"].value_or("ipc:///tmp/pubsub.ipc");
+    cfg.broker_file = config["BrokerFile"].value_or("tts.toml");
+    cfg.poll_interval_ms = config["PollIntervalMs"].value_or(0);
     if (auto arr = config["Symbols"].as_array()) {
         for (auto &&e : *arr) {
-            cfg.Symbols.push_back(e.value_or(""));
+            cfg.symbols.push_back(e.value_or(""));
         }
     }
     return cfg;
