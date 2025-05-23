@@ -27,5 +27,6 @@ add_subdirectory(src/operator operator)
 add_subdirectory(src/channel channel)
 
 add_subdirectory(src/ctp_md ctp_md)
+add_subdirectory(src/bt_md bt_md)
 add_subdirectory(src/ctp_td ctp_td)
 # add_subdirectory(src/data data)
