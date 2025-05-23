@@ -69,5 +69,22 @@ class SPSC {
 
         return value;
     }
+
+    // Non-allocating pop method
+    bool pop(T& out) noexcept {
+        size_t current_read = read_pos_.load(std::memory_order_relaxed);
+        size_t current_write = write_pos_.load(std::memory_order_acquire);
+
+        // Queue is empty
+        if (current_read >= current_write) return false;
+
+        // Move the item to the output parameter
+        out = std::move(buffer_[current_read & MASK]);
+
+        // Update the read position
+        read_pos_.store(current_read + 1, std::memory_order_release);
+
+        return true;
+    }
 };
 }  // namespace lockfree
