@@ -16,11 +16,11 @@ struct CtpConfig {
 };
 
 struct BtConfig {
-    std::string dt_start{};
-    std::string dt_end{};
-    std::string interval{};
+    std::string db_uri{};
+    std::string date_start{};
+    std::string date_end{};
 
-    static BtConfig read_config(std::string_view filename);
+    static BtConfig readConfig(std::string_view filename);
 };
 
 struct NngConfig {

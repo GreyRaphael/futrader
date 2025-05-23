@@ -20,9 +20,14 @@ CtpConfig CtpConfig::read_config(std::string_view filename, std::string_view use
     return cfg;
 }
 
-BtConfig BtConfig::read_config(std::string_view filename) {
-    // todo
-    return BtConfig{};
+BtConfig BtConfig::readConfig(std::string_view filename) {
+    auto config = toml::parse_file(filename);
+
+    BtConfig cfg{};
+    cfg.db_uri = config["db_uri"].value_or("futures.parquet");
+    cfg.date_start = config["date_start"].value_or("2025-01-01");
+    cfg.date_end = config["date_end"].value_or("2025-02-01");
+    return cfg;
 }
 
 NngConfig NngConfig::read_config(std::string_view filename) {
