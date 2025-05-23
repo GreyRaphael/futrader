@@ -28,8 +28,8 @@ struct CtpMdClient : CThostFtdcMdSpi {
     }
     ~CtpMdClient() { _api->Release(); }
 
-    void start();
     void subscribe(std::vector<std::string> symbols) { _symbols = std::move(symbols); }
+    void start();
 
    private:
     void OnFrontConnected() override;
