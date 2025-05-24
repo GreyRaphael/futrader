@@ -27,7 +27,7 @@ endif()
 # publish bt tick to nng
 add_executable(bt_pub bt_pub.cpp)
 target_link_libraries(bt_pub PRIVATE bt_md)
-target_link_libraries(bt_pub PRIVATE nng::nng)
+target_link_libraries(bt_pub PRIVATE cppzmq)
 
 # copy nng.toml
 configure_file(

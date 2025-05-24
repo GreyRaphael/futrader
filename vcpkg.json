@@ -1,9 +1,9 @@
 {
   "dependencies": [
+    "cppzmq",
     "doctest",
     "dylib",
-    "tomlplusplus",
-    "nng",
-    "frozen"
+    "frozen",
+    "tomlplusplus"
   ]
 }
