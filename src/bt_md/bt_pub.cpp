@@ -1,34 +1,36 @@
+#include <zmq.h>
+
 #include <bt_md.hpp>
 #include <cassert>
-#include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <string>
-#include <zmq.hpp>
 
 #include "quote_type.h"
-#include "struct_parser.hpp"
 
 int main() {
     std::string_view cfg_filename = "nng.toml";
     assert(std::filesystem::exists(cfg_filename));
     auto config = NngConfig::readConfig(cfg_filename);
 
-    zmq::context_t context{1};  // 1 I/O thread
-    zmq::socket_t publisher(context, zmq::socket_type::pub);
+    void* context = zmq_ctx_new();
+    void* publisher = zmq_socket(context, ZMQ_PUB);
 
     // Set high-water mark for outbound messages
-    publisher.set(zmq::sockopt::sndhwm, 0);
+    int sndhwm = 0;  // Adjust as needed
+    zmq_setsockopt(publisher, ZMQ_SNDHWM, &sndhwm, sizeof(sndhwm));
 
-    // Bind to the same address (assuming it's something like "ipc:///tmp/your_socket")
-    publisher.bind(config.address);
+    // Bind to IPC address (e.g., "ipc:///tmp/your_socket")
+    zmq_bind(publisher, config.address.c_str());
 
-    BactestMdClient bt_cli{config.broker_file, [&publisher](TickData& tick) {
-                               zmq::message_t message(sizeof(TickData));
-                               std::memcpy(message.data(), &tick, sizeof(TickData));
-                               publisher.send(message, zmq::send_flags::none);
-                               //    print_struct(&tick);
+    BactestMdClient bt_cli{config.broker_file, [publisher](TickData& tick) {
+                               zmq_send(publisher, &tick, sizeof(TickData), 0);
                            }};
 
     bt_cli.subscribe(config.symbols);
     bt_cli.start();
+
+    // Cleanup (will not be reached if bt_cli.start() blocks indefinitely)
+    zmq_close(publisher);
+    zmq_ctx_term(context);
 }
