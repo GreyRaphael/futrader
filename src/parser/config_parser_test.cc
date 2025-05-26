@@ -53,8 +53,8 @@ TEST_CASE("testing tts.toml") {
     CHECK_EQ(md_libpath.filename().string(), "thostmduserapi_se.so");
 }
 
-TEST_CASE("testing nng.toml") {
-    std::string_view filename{"nng.toml"};
+TEST_CASE("testing zmq.toml") {
+    std::string_view filename{"zmq.toml"};
     REQUIRE(std::filesystem::exists(filename));
 
     auto nng_config = ZmqConfig::readConfig(filename);

@@ -11,7 +11,7 @@
 #include "struct_parser.hpp"
 
 int main(int argc, char const* argv[]) {
-    std::string_view cfg_filename = "nng.toml";
+    std::string_view cfg_filename = "zmq.toml";
     assert(std::filesystem::exists(cfg_filename));
     auto config = NngConfig::readConfig(cfg_filename);
 

@@ -9,7 +9,7 @@
 #include "quote_type.h"
 
 int main() {
-    std::string_view cfg_filename = "nng.toml";
+    std::string_view cfg_filename = "zmq.toml";
     assert(std::filesystem::exists(cfg_filename));
     auto config = ZmqConfig::readConfig(cfg_filename);
 

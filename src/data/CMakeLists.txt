@@ -38,10 +38,10 @@ configure_file(
     COPYONLY
 )
 
-# copy nng.toml
+# copy zmq.toml
 configure_file(
-    "${CMAKE_SOURCE_DIR}/config/nng.toml"
-    "${CMAKE_CURRENT_BINARY_DIR}/nng.toml"
+    "${CMAKE_SOURCE_DIR}/config/zmq.toml"
+    "${CMAKE_CURRENT_BINARY_DIR}/zmq.toml"
     COPYONLY
 )
 
