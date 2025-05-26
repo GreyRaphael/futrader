@@ -11,7 +11,7 @@
 int main() {
     std::string_view cfg_filename = "nng.toml";
     assert(std::filesystem::exists(cfg_filename));
-    auto config = NngConfig::readConfig(cfg_filename);
+    auto config = ZmqConfig::readConfig(cfg_filename);
 
     void* context = zmq_ctx_new();
     void* publisher = zmq_socket(context, ZMQ_PUB);

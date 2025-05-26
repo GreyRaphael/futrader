@@ -30,10 +30,10 @@ BtConfig BtConfig::readConfig(std::string_view filename) {
     return cfg;
 }
 
-NngConfig NngConfig::readConfig(std::string_view filename) {
+ZmqConfig ZmqConfig::readConfig(std::string_view filename) {
     auto config = toml::parse_file(filename);
 
-    NngConfig cfg{};
+    ZmqConfig cfg{};
     cfg.address = config["Address"].value_or("ipc:///tmp/pubsub.ipc");
     cfg.broker_file = config["BrokerFile"].value_or("tts.toml");
     cfg.poll_interval_ms = config["PollIntervalMs"].value_or(0);

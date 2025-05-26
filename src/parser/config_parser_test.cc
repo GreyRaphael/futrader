@@ -57,7 +57,7 @@ TEST_CASE("testing nng.toml") {
     std::string_view filename{"nng.toml"};
     REQUIRE(std::filesystem::exists(filename));
 
-    auto nng_config = NngConfig::readConfig(filename);
+    auto nng_config = ZmqConfig::readConfig(filename);
     CHECK_EQ(nng_config.address, "ipc:///tmp/pubsub.ipc");
     CHECK_EQ(nng_config.broker_file, "tts.toml");
     CHECK_EQ(nng_config.symbols[0], "MA509");

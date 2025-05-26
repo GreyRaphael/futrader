@@ -23,13 +23,13 @@ struct BtConfig {
     static BtConfig readConfig(std::string_view filename);
 };
 
-struct NngConfig {
+struct ZmqConfig {
     std::string address;
     int poll_interval_ms;
     std::string broker_file;
     std::vector<std::string> symbols;
 
-    static NngConfig readConfig(std::string_view filename);
+    static ZmqConfig readConfig(std::string_view filename);
 };
 
 struct DuckdbConfig {
