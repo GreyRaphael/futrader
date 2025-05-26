@@ -15,6 +15,8 @@ if(BUILD_TESTING)
     target_link_libraries(ctp_md_test PRIVATE doctest::doctest)
     # use SPSC
     target_link_libraries(ctp_md_test PRIVATE channel)
+    # use zmq
+    target_link_libraries(ctp_md_test PRIVATE libzmq)
 
     # copy *.so
     configure_file(
@@ -35,6 +37,13 @@ if(BUILD_TESTING)
     configure_file(
         "${CMAKE_SOURCE_DIR}/config/errors.toml"
         "${CMAKE_CURRENT_BINARY_DIR}/errors.toml"
+        COPYONLY
+    )
+
+    # copy zmq.toml
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/config/zmq.toml"
+        "${CMAKE_CURRENT_BINARY_DIR}/zmq.toml"
         COPYONLY
     )
 

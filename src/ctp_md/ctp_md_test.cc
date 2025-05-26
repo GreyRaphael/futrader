@@ -4,11 +4,13 @@
 #include <string_view>
 #include <thread>
 
+#include "config_parser.h"
 #include "quote_type.h"
 #include "spsc.hpp"
 #include "struct_parser.hpp"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
+#include <zmq.h>
 
 #include <filesystem>
 #include <print>
@@ -129,4 +131,34 @@ TEST_CASE("tts_spsc_stack") {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
     }
+}
+
+TEST_CASE("tts_zmq") {
+    std::string_view cfg_filename{"zmq.toml"};
+    REQUIRE(std::filesystem::exists(cfg_filename));
+    auto config = ZmqConfig::readConfig(cfg_filename);
+    REQUIRE(std::filesystem::exists(config.broker_file));  // tts.toml exists
+    REQUIRE(std::filesystem::exists("errors.toml"));
+    REQUIRE(std::filesystem::exists("tts/thostmduserapi_se.so"));
+
+    void* context = zmq_ctx_new();
+    void* publisher = zmq_socket(context, ZMQ_PUB);
+    // Set high-water mark for outbound messages
+    int sndhwm = 0;  // Adjust as needed
+    zmq_setsockopt(publisher, ZMQ_SNDHWM, &sndhwm, sizeof(sndhwm));
+
+    // Bind to IPC address (e.g., "ipc:///tmp/your_socket")
+    zmq_bind(publisher, config.address.c_str());
+
+    CtpMdClient md_cli{config.broker_file, [publisher](TickData const& tick) {
+                           zmq_send(publisher, &tick, sizeof(TickData), 0);  // flags=0, default for pub mode
+                       }};
+    md_cli.subscribe(config.symbols);
+    md_cli.start();
+
+    std::println("Press Enter to exit...");
+    getchar();
+    // Cleanup (will not be reached if bt_cli.start() blocks indefinitely)
+    zmq_close(publisher);
+    zmq_ctx_term(context);
 }
