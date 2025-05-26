@@ -17,7 +17,7 @@ TEST_CASE("testing the factorial function") {
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        ptr->push({});
+        ptr->push(std::nullopt);
     }};
 
     std::jthread consumer{[ptr] {
@@ -30,7 +30,8 @@ TEST_CASE("testing the factorial function") {
             }
 
             if (*value == std::nullopt) break;
-            std::println("consumer got {}", value.value().value());
+            // value->value() == value.value().value()
+            std::println("consumer got {}", value->value());
         }
     }};
 }
