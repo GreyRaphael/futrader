@@ -24,7 +24,7 @@ if(BUILD_TESTING)
     add_test(NAME bt_md_test COMMAND bt_md_test)
 endif()
 
-# publish bt tick to nng
+# publish bt tick to zmq
 add_executable(bt_pub bt_pub.cpp)
 target_link_libraries(bt_pub PRIVATE bt_md)
 target_link_libraries(bt_pub PRIVATE libzmq)

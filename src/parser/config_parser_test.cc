@@ -57,9 +57,9 @@ TEST_CASE("testing zmq.toml") {
     std::string_view filename{"zmq.toml"};
     REQUIRE(std::filesystem::exists(filename));
 
-    auto nng_config = ZmqConfig::readConfig(filename);
-    CHECK_EQ(nng_config.address, "ipc:///tmp/pubsub.ipc");
-    CHECK_EQ(nng_config.broker_file, "tts.toml");
-    CHECK_EQ(nng_config.symbols[0], "MA509");
-    CHECK_EQ(nng_config.symbols[1], "rb2507");
+    auto config = ZmqConfig::readConfig(filename);
+    CHECK_EQ(config.address, "ipc:///tmp/pubsub.ipc");
+    CHECK_EQ(config.broker_file, "tts.toml");
+    CHECK_EQ(config.symbols[0], "MA509");
+    CHECK_EQ(config.symbols[1], "rb2507");
 }
