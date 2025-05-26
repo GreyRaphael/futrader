@@ -13,6 +13,8 @@ if(BUILD_TESTING)
     target_link_libraries(bt_md_test PRIVATE doctest::doctest)
     # use SPSC
     target_link_libraries(bt_md_test PRIVATE channel)
+    # use zmq
+    target_link_libraries(bt_md_test PRIVATE libzmq)
 
     # copy bt.toml
     configure_file(
@@ -20,18 +22,12 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_BINARY_DIR}/bt.toml"
         COPYONLY
     )
+    # copy zmq.toml
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/config/zmq.toml"
+        "${CMAKE_CURRENT_BINARY_DIR}/zmq.toml"
+        COPYONLY
+    )
 
     add_test(NAME bt_md_test COMMAND bt_md_test)
 endif()
-
-# publish bt tick to zmq
-add_executable(bt_pub bt_pub.cpp)
-target_link_libraries(bt_pub PRIVATE bt_md)
-target_link_libraries(bt_pub PRIVATE libzmq)
-
-# copy zmq.toml
-configure_file(
-    "${CMAKE_SOURCE_DIR}/config/zmq.toml"
-    "${CMAKE_CURRENT_BINARY_DIR}/zmq.toml"
-    COPYONLY
-)
