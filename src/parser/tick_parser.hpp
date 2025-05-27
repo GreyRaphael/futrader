@@ -13,7 +13,7 @@
 #include <string_view>
 
 #include "ThostFtdcUserApiStruct.h"
-#include "quote_type.h"
+#include "i_quote.h"
 #include "string_parser.hpp"
 
 template <typename Clock, typename Duration>

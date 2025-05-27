@@ -12,7 +12,7 @@
 
 #include "config_parser.h"
 #include "error_parser.hpp"
-#include "quote_type.h"
+#include "i_quote.h"
 #include "tick_parser.hpp"
 
 template <typename CB>

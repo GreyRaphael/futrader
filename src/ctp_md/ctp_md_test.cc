@@ -5,7 +5,7 @@
 #include <thread>
 
 #include "config_parser.h"
-#include "quote_type.h"
+#include "i_quote.h"
 #include "spsc.hpp"
 #include "struct_parser.hpp"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN

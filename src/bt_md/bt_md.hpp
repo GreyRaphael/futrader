@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "config_parser.h"
-#include "quote_type.h"
+#include "i_quote.h"
 
 template <typename CB>
 struct BactestMdClient {
