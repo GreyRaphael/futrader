@@ -2,8 +2,10 @@
 #include <cstddef>
 #include <filesystem>
 #include <print>
+#include <string>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 #include "struct_parser.hpp"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
@@ -66,7 +68,7 @@ TEST_CASE("duckdb_spsc") {
     }
 }
 
-TEST_CASE("duckdb_zmq") {
+TEST_CASE("duckdb_zmq_send") {
     std::string_view cfg_filename = "zmq.toml";
     REQUIRE(std::filesystem::exists(cfg_filename));
     auto config = ZmqConfig::readConfig(cfg_filename);
@@ -90,5 +92,40 @@ TEST_CASE("duckdb_zmq") {
 
     // Cleanup (will not be reached if bt_cli.start() blocks indefinitely)
     zmq_close(publisher);
+    zmq_ctx_term(context);
+}
+
+TEST_CASE("duckdb_zmq_recv") {
+    std::string_view cfg_filename = "zmq.toml";
+    REQUIRE(std::filesystem::exists(cfg_filename));
+    auto config = ZmqConfig::readConfig(cfg_filename);
+
+    void* context = zmq_ctx_new();
+    void* subscriber = zmq_socket(context, ZMQ_SUB);
+
+    // Set high-water mark for inbound messages
+    int rcvhwm = 0;  // Adjust as needed
+    zmq_setsockopt(subscriber, ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
+
+    // Connect to IPC address (e.g., "ipc:///tmp/your_socket")
+    zmq_connect(subscriber, config.address.c_str());
+
+    // Subscribe topics
+    std::vector<std::string> topics = {"rb", "MA"};
+    for (auto&& topic : topics) {
+        zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, topic.data(), topic.length());
+    }
+
+    TickData tick{};
+    size_t count = 0;
+    while (true) {
+        zmq_recv(subscriber, &tick, sizeof(TickData), 0);
+        ++count;
+        auto tp = std::chrono::sys_time<std::chrono::milliseconds>{std::chrono::milliseconds{tick.stamp}};
+        std::println("recv: {},{},{}, count={}", tick.symbol, tp, tick.last, count);
+    }
+
+    // Cleanup (will not be reached in this infinite loop)
+    zmq_close(subscriber);
     zmq_ctx_term(context);
 }
