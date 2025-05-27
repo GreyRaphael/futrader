@@ -103,6 +103,10 @@ TEST_CASE("duckdb_zmq_recv") {
     void* context = zmq_ctx_new();
     void* subscriber = zmq_socket(context, ZMQ_SUB);
 
+    // set receive timeout
+    int rcvtimeo = 5000;  // 1 second timeout
+    zmq_setsockopt(subscriber, ZMQ_RCVTIMEO, &rcvtimeo, sizeof(rcvtimeo));
+
     // Set high-water mark for inbound messages
     int rcvhwm = 0;  // Adjust as needed
     zmq_setsockopt(subscriber, ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
@@ -119,10 +123,24 @@ TEST_CASE("duckdb_zmq_recv") {
     TickData tick{};
     size_t count = 0;
     while (true) {
-        zmq_recv(subscriber, &tick, sizeof(TickData), 0);
+        // Receive messages
+        int rc = zmq_recv(subscriber, &tick, sizeof(TickData), 0);
+        if (rc == -1) {
+            if (zmq_errno() == EAGAIN) {
+                std::println("No messages received, retrying...");
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // continue;  // Retry on timeout
+                break;  // Exit on timeout to avoid infinite loop
+            } else {
+                std::println("Error receiving message: {}", zmq_strerror(zmq_errno()));
+                break;  // Exit on other errors
+            }
+        }
+
         ++count;
+        // Process the received tick data
         auto tp = std::chrono::sys_time<std::chrono::milliseconds>{std::chrono::milliseconds{tick.stamp}};
-        std::println("recv: {},{},{}, count={}", tick.symbol, tp, tick.last, count);
+        std::println("> {},{},{},count={}", tick.symbol, tp, tick.last, count);
     }
 
     // Cleanup (will not be reached in this infinite loop)
