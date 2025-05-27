@@ -1,7 +1,8 @@
 #pragma once
 #include <algorithm>
 
-#include "quote_type.h"
+#include "i_quote.h"
+#include "i_order.h"
 #include "rolling.hpp"
 
 struct DualThrust {
@@ -9,7 +10,7 @@ struct DualThrust {
         return "DualThrust";
     }
 
-    void onTick(const TickData& tick) {
+    std::optional<Order> onTick(const TickData& tick) {
         auto dyn_length = std::clamp(_base_length, 20, 70);
         auto meaner = rolling::Meaner(dyn_length);
         // 原来的策略逻辑
@@ -22,6 +23,7 @@ struct DualThrust {
         } else {
             // 空头平仓
         }
+        return std::nullopt;
     }
 
    private:
