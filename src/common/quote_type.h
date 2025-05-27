@@ -2,10 +2,11 @@
 
 #include <cstdint>
 
-typedef char symbol_t[32];
+typedef char SymbolType[16];
+constexpr std::size_t SYMBOL_SIZE = sizeof(SymbolType);
 
 struct BarData {
-    symbol_t symbol;
+    SymbolType symbol;
     int64_t stamp_start, stamp_last;
     double open, high, low, close;
     int64_t volume;
@@ -14,7 +15,7 @@ struct BarData {
 };
 
 struct TickData {
-    symbol_t symbol;
+    SymbolType symbol;
     int64_t stamp;
     double open, high, low, last;
     double limit_down, limit_up;

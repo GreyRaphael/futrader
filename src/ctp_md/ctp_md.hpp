@@ -122,7 +122,7 @@ void CtpMdClient<CB>::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDept
     // print_struct(pDepthMarketData);
 
     TickData tick{};
-    memcpy(tick.symbol, pDepthMarketData->InstrumentID, 31);
+    memcpy(tick.symbol, pDepthMarketData->InstrumentID, SYMBOL_SIZE-1);
     // ActionDay or TradingDay?
     tick.stamp = _stamp_calculator.compute(pDepthMarketData->ActionDay, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
     tick.open = pDepthMarketData->OpenPrice;
