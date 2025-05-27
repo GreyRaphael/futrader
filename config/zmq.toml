@@ -1,5 +1,5 @@
-Address = "ipc:///tmp/pubsub.ipc"
-# Address = "ipc://@pubsub" # Linux Only
+# Address = "ipc:///tmp/pubsub.ipc"
+Address = "ipc://@hq" # Linux Only
 PollIntervalMs = 10
 BrokerFile = "tts.toml"
 Symbols = ["MA509", "rb2507"]
