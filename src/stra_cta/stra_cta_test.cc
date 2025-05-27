@@ -1,6 +1,7 @@
 #include <print>
 
 #include "aberration.hpp"
+#include "dual_thrust.hpp"
 #include "i_strategy.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
@@ -14,5 +15,10 @@ void testConcept(StrategyConcept auto& strategy) {
 
 TEST_CASE("aberration") {
     Aberration stg;
+    testConcept(stg);
+}
+
+TEST_CASE("dual_thrust") {
+    DualThrust stg;
     testConcept(stg);
 }

@@ -4,9 +4,9 @@
 #include "quote_type.h"
 #include "rolling.hpp"
 
-struct Aberration {
+struct DualThrust {
     static const char* name() {
-        return "Aberration";
+        return "DualThrust";
     }
 
     void onTick(const TickData& tick) {
