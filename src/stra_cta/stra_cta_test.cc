@@ -1,25 +1,27 @@
 #include <print>
+#include <variant>
 
-#include "aberration.hpp"
-#include "dual_thrust.hpp"
-#include "i_strategy.h"
-#include "i_quote.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
-void testConcept(CtaStgConcept auto& strategy) {
-    std::println("Strategy name: {}", strategy.name());
-    TickData tick;  // Assuming TickData is defined elsewhere
-    strategy.onTick(tick);
-    std::println("Strategy executed successfully.");
-}
+#include "aberration.hpp"
+#include "dual_thrust.hpp"
+#include "stra_cta.h"
 
 TEST_CASE("aberration") {
     Aberration stg;
-    testConcept(stg);
 }
 
 TEST_CASE("dual_thrust") {
     DualThrust stg;
-    testConcept(stg);
+}
+
+TEST_CASE("polymorphism") {
+    std::vector<CtaStrategy> strategies;
+    strategies.emplace_back(Aberration{});
+    strategies.emplace_back(DualThrust{});
+
+    for (const auto& strategy : strategies) {
+        std::visit([](const auto& stg) { std::println("strategy name={}", stg.name()); }, strategy);
+    }
 }
