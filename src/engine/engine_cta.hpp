@@ -129,7 +129,7 @@ struct CtaZmqEngine {
     }
 
    private:
-    auto _split2buckets(std::span<const std::string_view> symbols) {
+    auto _split2buckets(std::span<std::string_view> symbols) {
         std::array<size_t, ThreadNum> counts{};
 
         // Count
