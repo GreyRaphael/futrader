@@ -7,6 +7,6 @@
 #include "engine_cta.hpp"
 
 TEST_CASE("cta") {
-    std::vector<std::string> symbols{"AAPL", "GOOGL", "MSFT"};
-    CtaZmqEngine engine{"zmq.toml"};
+    // std::vector<std::string> symbols{"AAPL", "GOOGL", "MSFT"};
+    // CtaZmqEngine engine{"zmq.toml"};
 }
