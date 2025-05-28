@@ -8,6 +8,8 @@ target_link_libraries(engine_cta INTERFACE parser)
 target_link_libraries(engine_cta INTERFACE stra_cta)
 # use parallel_hashmap
 target_include_directories(engine_cta INTERFACE ${PARALLEL_HASHMAP_INCLUDE_DIRS})
+# use zmq
+target_link_libraries(engine_cta INTERFACE libzmq)
 
 if(BUILD_TESTING)
     add_executable(engine_cta_test engine_cta_test.cc)
