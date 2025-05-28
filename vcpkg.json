@@ -4,6 +4,7 @@
     "dylib",
     "frozen",
     "tomlplusplus",
-    "zeromq"
+    "zeromq",
+    "parallel-hashmap"
   ]
 }

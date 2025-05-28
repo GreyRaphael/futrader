@@ -6,6 +6,8 @@ target_include_directories(engine_cta INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(engine_cta INTERFACE parser)
 # stra_cta
 target_link_libraries(engine_cta INTERFACE stra_cta)
+# use parallel_hashmap
+target_include_directories(engine_cta INTERFACE ${PARALLEL_HASHMAP_INCLUDE_DIRS})
 
 if(BUILD_TESTING)
     add_executable(engine_cta_test engine_cta_test.cc)

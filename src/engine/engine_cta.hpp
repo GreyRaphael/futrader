@@ -1,5 +1,7 @@
 #pragma once
 
+#include <parallel_hashmap/phmap.h>
+
 #include <cassert>
 #include <filesystem>
 #include <string_view>
@@ -11,9 +13,11 @@
 #include "zmq.h"
 
 struct CtaZmqEngine {
-    CtaZmqEngine(std::string_view cfg_filename, std::vector<CtaStrategy> & cta_stgs){
-
+    CtaZmqEngine(std::string_view cfg_filename, std::vector<CtaStrategy>& cta_stgs) {
     }
+
+   private:
+    phmap::flat_hash_map<std::string_view, int> _symbol_map;
 };
 
 // struct CtaZmqEngine {
