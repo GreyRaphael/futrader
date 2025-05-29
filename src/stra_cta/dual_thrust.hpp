@@ -3,14 +3,13 @@
 #include <cstdint>
 #include <cstring>
 #include <optional>
+#include <string>
 
 #include "i_order.h"
 #include "i_quote.h"
 
 struct DualThrust {
-    static const char* name() {
-        return "DualThrust";
-    }
+    std::string name{"DualThrust"};
 
     std::optional<Order> onTick(const TickData& tick) {
         // 初始化开盘价、最高价和最低价
@@ -24,8 +23,6 @@ struct DualThrust {
             _min = std::min(_min, tick.last);
         }
 
-        Order order{};
-
         // 计算买卖阈值
         double range = _max - _min;
         double buy_threshold = _open + _k1 * range;
@@ -34,51 +31,51 @@ struct DualThrust {
         if (_position == 0) {
             if (tick.last >= buy_threshold) {
                 // 价格突破买入阈值，触发开多头仓位
-                memcpy(order.symbol, tick.symbol, sizeof(SymbolType));
-                order.timestamp = tick.stamp;
-                order.volume = _lots;
-                order.direction = DirectionType::BUY;
-                order.offset = OffsetFlagType::OPEN;
+                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                _order.timestamp = tick.stamp;
+                _order.volume = _lots;
+                _order.direction = DirectionType::BUY;
+                _order.offset = OffsetFlagType::OPEN;
                 _position = 1;
-                return order;
+                return _order;
             }
             if (tick.last <= sell_threshold) {
                 // 价格突破卖出阈值，触发开空头仓位
-                memcpy(order.symbol, tick.symbol, sizeof(SymbolType));
-                order.timestamp = tick.stamp;
-                order.volume = _lots;
-                order.direction = DirectionType::SELL;
-                order.offset = OffsetFlagType::OPEN;
+                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                _order.timestamp = tick.stamp;
+                _order.volume = _lots;
+                _order.direction = DirectionType::SELL;
+                _order.offset = OffsetFlagType::OPEN;
                 _position = -1;
-                return order;
+                return _order;
             }
         }
 
         if (_position > 0) {
             // 持有多头仓位，平仓条件：价格低于开盘价
             if (tick.last < _open) {
-                memcpy(order.symbol, tick.symbol, sizeof(SymbolType));
-                order.timestamp = tick.stamp;
-                order.volume = _lots;
-                order.direction = DirectionType::SELL;
-                order.offset = OffsetFlagType::CLOSE;
+                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                _order.timestamp = tick.stamp;
+                _order.volume = _lots;
+                _order.direction = DirectionType::SELL;
+                _order.offset = OffsetFlagType::CLOSE;
                 _position = 0;
                 // 重置参数以便下一周期重新计算
                 _initialized = false;
-                return order;
+                return _order;
             }
         } else if (_position < 0) {
             // 持有空头仓位，平仓条件：价格高于开盘价
             if (tick.last > _open) {
-                memcpy(order.symbol, tick.symbol, sizeof(SymbolType));
-                order.timestamp = tick.stamp;
-                order.volume = _lots;
-                order.direction = DirectionType::BUY;
-                order.offset = OffsetFlagType::CLOSE;
+                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                _order.timestamp = tick.stamp;
+                _order.volume = _lots;
+                _order.direction = DirectionType::BUY;
+                _order.offset = OffsetFlagType::CLOSE;
                 _position = 0;
                 // 重置参数以便下一周期重新计算
                 _initialized = false;
-                return order;
+                return _order;
             }
         }
 
@@ -86,6 +83,7 @@ struct DualThrust {
     }
 
    private:
+    Order _order{"DualThrust"};
     int _position{0};  // 当前持仓：1 多头, -1 空头, 0 空仓
     uint32_t _lots{1};
 

@@ -22,6 +22,6 @@ TEST_CASE("polymorphism") {
     strategies.emplace_back(DualThrust{});
 
     for (const auto& strategy : strategies) {
-        std::visit([](const auto& stg) { std::println("strategy name={}", stg.name()); }, strategy);
+        std::visit([](const auto& stg) { std::println("strategy name={}", stg.name); }, strategy);
     }
 }
