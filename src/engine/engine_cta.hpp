@@ -9,6 +9,7 @@
 #include <format>
 #include <functional>
 #include <optional>
+#include <print>
 #include <string_view>
 #include <thread>
 #include <utility>
@@ -21,50 +22,78 @@
 #include "stra_cta.h"
 #include "zmq.h"
 
-struct CtaStgWorker {
-    CtaStgWorker(std::vector<std::string>&& symbols, std::string_view task_url, void* context = nullptr) : _symbols(std::move(symbols)) {
-        _context = (_context == nullptr) ? zmq_ctx_new() : context;
-
-        _tick_puller = zmq_socket(_context, ZMQ_PULL);
-        _order_pusher = zmq_socket(_context, ZMQ_PUSH);
-        zmq_bind(_tick_puller, task_url.data());
-        zmq_bind(_order_pusher, "ipc://@orders");
+// RAII wrapper for ZeroMQ context and sockets
+struct ZmqContext {
+    ZmqContext(int io_threads = 1) {
+        _ctx = zmq_ctx_new();
+        assert(_ctx);
+        zmq_ctx_set(_ctx, ZMQ_IO_THREADS, io_threads);
     }
-    ~CtaStgWorker() {
-        zmq_close(_tick_puller);
-        zmq_close(_order_pusher);
+    ~ZmqContext() { zmq_ctx_destroy(_ctx); }
+    void* get() const noexcept { return _ctx; }
+
+   private:
+    void* _ctx;
+};
+
+struct ZmqSocket {
+    ZmqSocket() noexcept : _socket(nullptr) {}
+    ZmqSocket(void* ctx, int type, std::string_view addr, bool bind = false) {
+        _socket = zmq_socket(ctx, type);
+        assert(_socket);
+        if (bind)  // as listener
+            zmq_bind(_socket, addr.data());
+        else  // as client
+            zmq_connect(_socket, addr.data());
+    }
+    ~ZmqSocket() {
+        if (_socket) zmq_close(_socket);
+    }
+    void* get() const noexcept { return _socket; }
+
+   private:
+    void* _socket;
+};
+
+struct CtaStgWorker {
+    CtaStgWorker(std::vector<std::string>& symbols, std::string_view task_url, void* context) : _context(context) {
+        _work_pull_socket = ZmqSocket(_context, ZMQ_PULL, task_url, false);
+        _order_push_socket = ZmqSocket(_context, ZMQ_PUSH, "ipc://@orders", true);
+        _stg_map.reserve(symbols.size());
     }
 
     void addStrategy(std::string_view symbol, CtaStrategy strategy) {
-        _cta_stg_map[symbol].push_back(std::move(strategy));
+        _stg_map[symbol].emplace_back(std::move(strategy));
     }
 
-    void start() {
+    void start(std::stop_token stop) {
         TickData tick{};
-        while (true) {
-            // Receive messages
-            if (zmq_recv(_tick_puller, &tick, sizeof(TickData), 0) <= 0) {
-                // Handle error or exit condition
-                continue;
-            };
-
-            for (auto&& stg : _cta_stg_map[tick.symbol]) {
-                // visit strategy with the tick data
-                auto order = std::visit([&tick](auto&& strategy) -> std::optional<Order> { return strategy.onTick(tick); }, stg);
-                if (order) {
-                    // send to another
-                    zmq_send(_order_pusher, &order.value(), sizeof(Order), 0);
+        zmq_pollitem_t items[] = {{_work_pull_socket.get(), 0, ZMQ_POLLIN, 0}};
+        while (!stop.stop_requested()) {
+            zmq_poll(items, 1, 100);  // Wait 100ms at most for socket
+            if (items[0].revents & ZMQ_POLLIN &&
+                zmq_recv(_work_pull_socket.get(), &tick, sizeof(TickData), 0) > 0) {
+                if (_stg_map.contains(tick.symbol)) {
+                    for (auto&& stg : _stg_map[tick.symbol]) {
+                        // visit strategy with the tick data
+                        if (auto order = std::visit([&tick](auto&& strategy) -> std::optional<Order> { return strategy.onTick(tick); }, stg)) {
+                            // send to another
+                            zmq_send(_order_push_socket.get(), &order.value(), sizeof(Order), 0);
+                        }
+                    }
+                } else {
+                    std::println("Worker received tick for unknown symbol: {}", tick.symbol);
                 }
             }
         }
     }
 
    private:
-    std::vector<std::string> _symbols;
-    void* _context{nullptr};
-    void* _tick_puller{nullptr};
-    void* _order_pusher{nullptr};
-    phmap::flat_hash_map<std::string_view, std::vector<CtaStrategy>> _cta_stg_map;
+    void* _context;
+    ZmqSocket _work_pull_socket{}, _order_push_socket{};
+    phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
+
+    std::atomic<bool> _running{true};
 };
 
 template <size_t ThreadNum>
@@ -73,90 +102,86 @@ struct CtaZmqEngine {
         assert(std::filesystem::exists(cfg_filename));
         auto config = ZmqConfig::readConfig(cfg_filename);
 
-        _buckets = _split2buckets(config.symbols);
+        _split2buckets(config.symbols);
+        _stg_map.reserve(config.symbols.size());
 
-        _context = zmq_ctx_new();
-
-        // subscribe to quotes
-        _sub_socket = zmq_socket(_context, ZMQ_SUB);
+        // subscribe to market data
+        _md_sub_socket = ZmqSocket(_context.get(), ZMQ_SUB, config.address, false);
         int rcvhwm = 0;  // Adjust as needed
-        zmq_setsockopt(_sub_socket, ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
-        zmq_connect(_sub_socket, config.address.data());
+        zmq_setsockopt(_md_sub_socket.get(), ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
         for (auto&& topic : config.symbols) {
-            zmq_setsockopt(_sub_socket, ZMQ_SUBSCRIBE, topic.data(), topic.length());
+            zmq_setsockopt(_md_sub_socket.get(), ZMQ_SUBSCRIBE, topic.data(), topic.length());
         }
     }
-    ~CtaZmqEngine() {
-        zmq_close(_sub_socket);
-        for (auto& socket : _push_sockets) {
-            zmq_close(socket);
-        }
-        zmq_ctx_destroy(_context);
+
+    void addStrategy(std::string_view symbol, CtaStrategy strategy) {
+        _stg_map[symbol].emplace_back(std::move(strategy));
     }
 
     void init() {
-        for (size_t i = 0; i < ThreadNum; ++i) {
-            _push_sockets[i] = zmq_socket(_context, ZMQ_PUSH);
+        for (auto i = 0; i < ThreadNum; ++i) {
             auto addr = std::format("inproc://worker-{}", i);
-            zmq_connect(_push_sockets[i], addr.data());
-            _workers[i] = std::jthread([symbols = std::move(_buckets[i]), addr, this] {
-                CtaStgWorker engine{std::move(symbols), addr, _context};
-                for (auto&& [symbol, strategies] : _cta_stg_map) {
-                    for (auto&& strategy : strategies) {
-                        engine.addStrategy(symbol, std::move(strategy));
+            _work_push_sockets[i] = ZmqSocket(_context.get(), ZMQ_PUSH, addr, true);
+            _worker_threads[i] = std::jthread([this, i, addr](std::stop_token stoken) {
+                CtaStgWorker worker{_buckets[i], addr, _context.get()};
+                // maybe register strategies:
+                for (auto&& symbol : _buckets[i]) {
+                    if (_stg_map.contains(symbol)) {
+                        for (auto&& stg : _stg_map[symbol]) {
+                            worker.addStrategy(symbol, std::move(stg));
+                        }
+                    } else {
+                        std::println("Worker {} received unknown symbol: {}", i, symbol);
                     }
                 }
-                engine.start();
+
+                worker.start(stoken);
             });
         }
     }
 
     void start() {
         TickData tick{};
-        while (true) {
-            if (zmq_recv(_sub_socket, &tick, sizeof(TickData), 0) <= 0) {
-                // Handle error or exit condition
-                continue;
+        zmq_pollitem_t items[] = {{_md_sub_socket.get(), 0, ZMQ_POLLIN, 0}};
+        while (_running.load(std::memory_order_relaxed)) {
+            zmq_poll(items, 1, 100);  // Wait 100ms at most for socket
+            if (items[0].revents & ZMQ_POLLIN &&
+                zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
+                auto worker_id = _hasher(tick.symbol) % ThreadNum;
+                zmq_send(_work_push_sockets[worker_id], &tick, sizeof(TickData), 0);
             }
-            auto hash_value = _hasher(tick.symbol);
-            auto worker_id = hash_value % ThreadNum;
-            zmq_send(_push_sockets[worker_id], &tick, sizeof(TickData), 0);
         }
     }
 
-    void addStrategy(std::string_view symbol, CtaStrategy strategy) {
-        _cta_stg_map[symbol].push_back(std::move(strategy));
+    void stop() {
+        _running.store(false, std::memory_order_relaxed);
+        // also signal each worker
+        for (auto& worker : _worker_threads) {
+            if (worker.joinable()) {
+                worker.request_stop();
+            }
+        }
     }
 
    private:
-    auto _split2buckets(std::span<std::string_view> symbols) {
+    void _split2buckets(std::span<std::string_view> symbols) {
         std::array<size_t, ThreadNum> counts{};
-
         // Count
-        for (auto sv : symbols) {
-            counts[_hasher(sv) % ThreadNum]++;
-        }
-
+        for (auto sv : symbols) counts[_hasher(sv) % ThreadNum]++;
         // Reserve
-        std::array<std::vector<std::string>, ThreadNum> buckets;
-        for (int i = 0; i < ThreadNum; ++i) {
-            buckets[i].reserve(counts[i]);
-        }
-
+        for (int i = 0; i < ThreadNum; ++i) _buckets[i].reserve(counts[i]);
         // Fill
-        for (auto sv : symbols) {
-            buckets[_hasher(sv) % ThreadNum].emplace_back(sv);
-        }
-
-        return buckets;
+        for (auto sv : symbols) _buckets[_hasher(sv) % ThreadNum].emplace_back(sv);
     }
 
-    void* _context{nullptr};
-    void* _sub_socket{nullptr};
-    std::array<std::jthread, ThreadNum> _workers{};
-    std::array<void*, ThreadNum> _push_sockets{};
+    ZmqContext _context{1};  // Single IO thread for simplicity
+    ZmqSocket _md_sub_socket{};
+    std::array<ZmqSocket, ThreadNum> _work_push_sockets{};
+    std::array<std::jthread, ThreadNum> _worker_threads{};
 
     std::hash<std::string_view> _hasher{};
     std::array<std::vector<std::string>, ThreadNum> _buckets{};
-    phmap::flat_hash_map<std::string_view, std::vector<CtaStrategy>> _cta_stg_map;
+    phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
+
+    std::atomic<bool> _running{true};
 };
