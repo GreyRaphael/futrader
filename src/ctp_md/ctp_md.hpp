@@ -95,7 +95,7 @@ void CtpMdClient<CB>::OnFrontConnected() {
 
 template <typename CB>
 void CtpMdClient<CB>::OnFrontDisconnected(int nReason) {
-    std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
+    std::println("OnFrontDisconnected: {}", errconfig::DISCON_ERRORS.at(nReason));
 }
 
 template <typename CB>
