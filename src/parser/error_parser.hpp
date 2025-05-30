@@ -42,7 +42,7 @@ inline const std::map<int, std::string> DISCON_ERRORS{
     {0x2003, "收到错误报文"},
 };
 
-inline const std::map<int, std::string> REQ_RET_ERRORS{
+inline const std::map<int, std::string> REQ_ERRORS{
     // {0, "SUCCESS"},
     {-1, "网络连接失败"},
     {-2, "未处理请求超过许可数"},
