@@ -254,14 +254,18 @@ void CtpTdClient::QryDepthMarketData(std::string_view symbol) {
     CThostFtdcQryDepthMarketDataField req{};
     symbol.copy(req.InstrumentID, symbol.length());
     auto now = std::chrono::system_clock::now();
-    auto ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
-    // std::println(">ReqQryDepthMarketData ret={} at {:%F %T}", ret, now);
-    if (ret == 0) _sem.acquire();
-    // std::println(">>>ReqQryDepthMarketData ret={} at {:%F %T}", ret, now);
+
+    int ret = -1;
+    do {
+        ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
+        std::println("ReqQryDepthMarketData ret={} at {:%F %T}", ret, now);
+    } while (ret != 0);
+
+    _sem.acquire();
 }
 
 void CtpTdClient::OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-    handle_resp(pDepthMarketData, pRspInfo);
+    // handle_resp(pDepthMarketData, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
