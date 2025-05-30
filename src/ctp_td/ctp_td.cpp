@@ -68,7 +68,7 @@ void CtpTdClient::OnFrontConnected() {
 }
 
 void CtpTdClient::OnFrontDisconnected(int nReason) {
-    std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
+    std::println("OnFrontDisconnected: {}", errconfig::DISCON_ERRORS.at(nReason));
 }
 
 void CtpTdClient::OnHeartBeatWarning(int nTimeLapse) {
@@ -256,7 +256,7 @@ void CtpTdClient::QryDepthMarketData(std::string_view symbol) {
     auto now = std::chrono::system_clock::now();
     auto ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
     // std::println(">ReqQryDepthMarketData ret={} at {:%F %T}", ret, now);
-    _sem.acquire();
+    if (ret == 0) _sem.acquire();
     // std::println(">>>ReqQryDepthMarketData ret={} at {:%F %T}", ret, now);
 }
 
