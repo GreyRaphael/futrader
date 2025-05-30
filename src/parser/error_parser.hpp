@@ -34,12 +34,19 @@ inline std::string_view get(int key) {
     }
 }
 
-inline const std::map<int, std::string> discon_errors{
+inline const std::map<int, std::string> DISCON_ERRORS{
     {0x1001, "网络读失败"},
     {0x1002, "网络写失败"},
     {0x2001, "接收心跳超时"},
     {0x2002, "发送心跳失败"},
     {0x2003, "收到错误报文"},
+};
+
+inline const std::map<int, std::string> REQ_RET_ERRORS{
+    // {0, "SUCCESS"},
+    {-1, "网络连接失败"},
+    {-2, "未处理请求超过许可数"},
+    {-3, "每秒发送请求数超过许可数"},
 };
 }  // namespace errconfig
 
