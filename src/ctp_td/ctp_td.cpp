@@ -13,6 +13,7 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <thread>
 
 struct CtpTdClient::Impl {
     CtpConfig cfg{};
@@ -255,13 +256,17 @@ void CtpTdClient::QryDepthMarketData(std::string_view symbol) {
     symbol.copy(req.InstrumentID, symbol.length());
     auto now = std::chrono::system_clock::now();
 
-    int ret = -1;
-    do {
-        ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
-        std::println("ReqQryDepthMarketData ret={} at {:%F %T}", ret, now);
-    } while (ret != 0);
-
-    _sem.acquire();
+    while (true) {
+        auto ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
+        if (ret == 0) {
+            std::println("Succeed at {:%F %T}", now);
+            _sem.acquire();
+            break;
+        } else {
+            std::println("ReqQryDepthMarketData ret={} at {:%F %T}, {}", ret, now, errconfig::REQ_ERRORS.at(ret));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+    }
 }
 
 void CtpTdClient::OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
