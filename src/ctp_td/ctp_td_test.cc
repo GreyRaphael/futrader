@@ -1,4 +1,6 @@
+#include <chrono>
 #include <string_view>
+#include <thread>
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
@@ -21,8 +23,10 @@ TEST_CASE("tts") {
     // td_cli.QryInstrumentCommissionRate();
     // td_cli.QryInstrumentOrderCommRate();
     // td_cli.SettlementInfo();
-    td_cli.QryTradingAccount();
-    td_cli.QryInvestorPosition();
+    // td_cli.QryTradingAccount();
+    // td_cli.QryInvestorPosition();
+    // td_cli.QryDepthMarketData("rb2507");
+    td_cli.QryDepthMarketData("rb2510");
     getchar();
 }
 
@@ -40,7 +44,15 @@ TEST_CASE("ctp") {
     // td_cli.QryInstrumentCommissionRate();
     // td_cli.QryInstrumentOrderCommRate();
     // td_cli.SettlementInfo();
-    td_cli.QryTradingAccount();
-    td_cli.QryInvestorPosition();
+    // td_cli.QryTradingAccount();
+    // td_cli.QryInvestorPosition();
+    // td_cli.QryDepthMarketData("rb2507");
+
+    // 每秒查询10-15次的流速控制，超速了返回-3
+    for (auto i = 0; i < 10; ++i) {
+        td_cli.QryDepthMarketData("rb2507");
+        td_cli.QryDepthMarketData("rb2510");
+    }
+
     getchar();
 }

@@ -20,6 +20,7 @@ struct CtpTdClient : CThostFtdcTraderSpi {
     void QryProduct();
     void QryInstrumentCommissionRate();
     void QryInstrumentOrderCommRate();
+    void QryDepthMarketData(std::string_view symbol);
 
     bool Buy(std::string_view symbol, int lot, double price);
     bool Sell(std::string_view symbol, int lot, double price);
@@ -51,10 +52,11 @@ struct CtpTdClient : CThostFtdcTraderSpi {
     void OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
     void OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+    void OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
     // pImpl pattern
     struct Impl;
-    std::unique_ptr<Impl> pImpl{};
+    std::unique_ptr<Impl> pimpl{};
 
     CThostFtdcTraderApi *_tdapi{};
     std::binary_semaphore _sem{0};
