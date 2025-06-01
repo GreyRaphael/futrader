@@ -150,6 +150,7 @@ struct TimeStampCalculator {
 //------------------------------------------------------------------------------
 // Very-fast pack of 1–2 ASCII letters into a 16-bit key.
 // 相同期货品种的hash值相同
+// 自定义hash, 可以自定义unordered_map, 自定义每组对应的品种，方便跨品种套利
 // If the first character is not A–Z/a–z, returns 0.
 // Otherwise, if the second character is also a letter, returns (c0<<8)|c1;
 // else returns (c0<<8).
