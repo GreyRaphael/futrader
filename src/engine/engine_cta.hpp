@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <filesystem>
 #include <format>
-#include <functional>
 #include <optional>
 #include <print>
 #include <string_view>
@@ -20,6 +19,7 @@
 #include "i_order.h"
 #include "i_quote.h"
 #include "stra_cta.h"
+#include "tick_parser.hpp"
 #include "zmq.h"
 
 // RAII wrapper for ZeroMQ context and sockets
@@ -147,7 +147,7 @@ struct CtaZmqEngine {
             zmq_poll(items, 1, 100);  // Wait 100ms at most for socket
             if (items[0].revents & ZMQ_POLLIN &&
                 zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
-                auto worker_id = _hasher(tick.symbol) % ThreadNum;
+                auto worker_id = hashSymbol(tick.symbol) % ThreadNum;
                 zmq_send(_work_push_sockets[worker_id], &tick, sizeof(TickData), 0);
             }
         }
@@ -167,11 +167,11 @@ struct CtaZmqEngine {
     void _split2buckets(std::span<std::string_view> symbols) {
         std::array<size_t, ThreadNum> counts{};
         // Count
-        for (auto sv : symbols) counts[_hasher(sv) % ThreadNum]++;
+        for (auto sv : symbols) counts[hashSymbol(sv) % ThreadNum]++;
         // Reserve
         for (int i = 0; i < ThreadNum; ++i) _buckets[i].reserve(counts[i]);
         // Fill
-        for (auto sv : symbols) _buckets[_hasher(sv) % ThreadNum].emplace_back(sv);
+        for (auto sv : symbols) _buckets[hashSymbol(sv) % ThreadNum].emplace_back(sv);
     }
 
     ZmqContext _context{1};  // Single IO thread for simplicity
@@ -179,7 +179,6 @@ struct CtaZmqEngine {
     std::array<ZmqSocket, ThreadNum> _work_push_sockets{};
     std::array<std::jthread, ThreadNum> _worker_threads{};
 
-    std::hash<std::string_view> _hasher{};
     std::array<std::vector<std::string>, ThreadNum> _buckets{};
     phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
 
