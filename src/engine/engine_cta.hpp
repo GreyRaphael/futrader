@@ -147,7 +147,7 @@ struct CtaZmqEngine {
             zmq_poll(items, 1, 100);  // Wait 100ms at most for socket
             if (items[0].revents & ZMQ_POLLIN &&
                 zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
-                auto worker_id = hashSymbol(tick.symbol) % ThreadNum;
+                auto worker_id = hashFutureSymbol(tick.symbol) % ThreadNum;
                 zmq_send(_work_push_sockets[worker_id], &tick, sizeof(TickData), 0);
             }
         }
@@ -167,11 +167,11 @@ struct CtaZmqEngine {
     void _split2buckets(std::span<std::string_view> symbols) {
         std::array<size_t, ThreadNum> counts{};
         // Count
-        for (auto sv : symbols) counts[hashSymbol(sv) % ThreadNum]++;
+        for (auto sv : symbols) counts[hashFutureSymbol(sv) % ThreadNum]++;
         // Reserve
         for (int i = 0; i < ThreadNum; ++i) _buckets[i].reserve(counts[i]);
         // Fill
-        for (auto sv : symbols) _buckets[hashSymbol(sv) % ThreadNum].emplace_back(sv);
+        for (auto sv : symbols) _buckets[hashFutureSymbol(sv) % ThreadNum].emplace_back(sv);
     }
 
     ZmqContext _context{1};  // Single IO thread for simplicity

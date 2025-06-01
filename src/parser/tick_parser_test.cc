@@ -51,12 +51,12 @@ TEST_CASE("test tick2bar") {
 }
 
 TEST_CASE("hash") {
-    auto hash1 = hashSymbol("rb2507");
-    auto hash2 = hashSymbol("rb2510");
-    auto hash3 = hashSymbol("rb999");
+    auto hash1 = hashFutureSymbol("rb2507");
+    auto hash2 = hashFutureSymbol("rb2510");
+    auto hash3 = hashFutureSymbol("rb999");
     REQUIRE_EQ(hash1, hash2);
     REQUIRE_EQ(hash1, hash3);
-    auto hash4 = hashSymbol("a2507");
-    auto hash5 = hashSymbol("ao2509");
+    auto hash4 = hashFutureSymbol("a2507");
+    auto hash5 = hashFutureSymbol("ao2509");
     REQUIRE_NE(hash4, hash5);
 }

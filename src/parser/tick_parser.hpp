@@ -154,7 +154,7 @@ struct TimeStampCalculator {
 // Otherwise, if the second character is also a letter, returns (c0<<8)|c1;
 // else returns (c0<<8).
 //------------------------------------------------------------------------------
-inline constexpr uint16_t hashSymbol(std::string_view symbol) noexcept {
+inline constexpr uint16_t hashFutureSymbol(std::string_view symbol) noexcept {
     // --- [A] Check first character ---
     uint8_t c0 = static_cast<uint8_t>(symbol[0]);
     // if symbol[0] is outside A-Z and a-z, we bail (return 0 as “invalid”)
