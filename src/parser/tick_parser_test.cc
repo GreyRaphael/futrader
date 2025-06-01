@@ -26,7 +26,7 @@ TEST_CASE("test tick2bar") {
     md.LastPrice = 10;
     md.Volume = 2000;
     md.Turnover = 22000;
-    md.OpenInterest=100;
+    md.OpenInterest = 100;
     auto bar = bg.process_tick(&md);
     print_struct(&bar);
 
@@ -36,7 +36,7 @@ TEST_CASE("test tick2bar") {
     md.LastPrice = 11;
     md.Volume = 4000;
     md.Turnover = 42000;
-    md.OpenInterest=200;
+    md.OpenInterest = 200;
     bar = bg.process_tick(&md);
     print_struct(&bar);
 
@@ -45,7 +45,18 @@ TEST_CASE("test tick2bar") {
     md.LastPrice = 12;
     md.Volume = 6500;
     md.Turnover = 63000;
-    md.OpenInterest=300;
+    md.OpenInterest = 300;
     bar = bg.process_tick(&md);
     print_struct(&bar);
+}
+
+TEST_CASE("hash") {
+    auto hash1 = hashSymbol("rb2507");
+    auto hash2 = hashSymbol("rb2510");
+    auto hash3 = hashSymbol("rb999");
+    REQUIRE_EQ(hash1, hash2);
+    REQUIRE_EQ(hash1, hash3);
+    auto hash4 = hashSymbol("a2507");
+    auto hash5 = hashSymbol("ao2509");
+    REQUIRE_NE(hash4, hash5);
 }

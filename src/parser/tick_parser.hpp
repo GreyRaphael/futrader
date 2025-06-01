@@ -146,3 +146,27 @@ struct TimeStampCalculator {
     std::chrono::sys_days _cached_day_epoch{};
     int _cached_day{0};
 };
+
+//------------------------------------------------------------------------------
+// Very-fast pack of 1–2 ASCII letters into a 16-bit key.
+// If the first character is not A–Z/a–z, returns 0.
+// Otherwise, if the second character is also a letter, returns (c0<<8)|c1;
+// else returns (c0<<8).
+//------------------------------------------------------------------------------
+inline constexpr uint16_t hashSymbol(const char* symbol) noexcept {
+    // --- [A] Check first character ---
+    uint8_t c0 = static_cast<uint8_t>(symbol[0]);
+    // if symbol[0] is outside A-Z and a-z, we bail (return 0 as “invalid”)
+    if (!((c0 >= 'A' && c0 <= 'Z') || (c0 >= 'a' && c0 <= 'z'))) {
+        return 0;
+    }
+
+    // --- [B] Check second character ---
+    uint8_t c1 = static_cast<uint8_t>(symbol[1]);
+    if ((c1 >= 'A' && c1 <= 'Z') || (c1 >= 'a' && c1 <= 'z')) {
+        // Two letters: pack into 16 bits as (high=c0, low=c1)
+        return static_cast<uint16_t>(c0 << 8 | c1);
+    }
+    // Only one letter: pack c0 into high byte, low byte = 0
+    return static_cast<uint16_t>(c0 << 8);
+}
