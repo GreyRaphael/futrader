@@ -1,15 +1,16 @@
 #pragma once
 
 #include <parallel_hashmap/phmap.h>
+#include <zmq.h>
 
 #include <array>
 #include <cassert>
 #include <cstddef>
-#include <filesystem>
 #include <format>
 #include <optional>
 #include <print>
 #include <string_view>
+#include <taskflow/taskflow.hpp>
 #include <thread>
 #include <utility>
 #include <variant>
@@ -18,9 +19,9 @@
 #include "config_parser.h"
 #include "i_order.h"
 #include "i_quote.h"
+#include "spsc.hpp"
 #include "stra_cta.h"
 #include "tick_parser.hpp"
-#include "zmq.h"
 
 // RAII wrapper for ZeroMQ context and sockets
 struct ZmqContext {
@@ -182,5 +183,76 @@ struct CtaZmqEngine {
     std::array<std::vector<std::string>, ThreadNum> _buckets{};
     phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
 
+    std::atomic<bool> _running{true};
+};
+
+struct CtaEngine {
+    CtaEngine(std::string_view cfg_filename, size_t thread_num = std::thread::hardware_concurrency()) : _executor(thread_num) {
+        assert(std::filesystem::exists(cfg_filename));
+        auto config = ZmqConfig::readConfig(cfg_filename);
+
+        _stg_map.reserve(config.symbols.size());
+        // subscribe to market data
+        _md_sub_socket = ZmqSocket(_context.get(), ZMQ_SUB, config.address, false);
+        int rcvhwm = 0;  // Adjust as needed
+        zmq_setsockopt(_md_sub_socket.get(), ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
+        for (auto&& topic : config.symbols) {
+            zmq_setsockopt(_md_sub_socket.get(), ZMQ_SUBSCRIBE, topic.data(), topic.length());
+        }
+        // clear taskflow
+        _taskflow.clear();
+    }
+
+    void start() {
+        // start order push socket thread
+        std::jthread order_push_thread([this] {
+            ZmqSocket order_push_socket(_context.get(), ZMQ_PUSH, "ipc://@orders", true);
+            while (_running.load(std::memory_order_relaxed)) {
+                if (auto order = _channel.pop()) {
+                    zmq_send(order_push_socket.get(), &order.value(), sizeof(Order), 0);
+                } else {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));  // Avoid busy waiting
+                }
+            }
+        });
+
+        // start the taskflow
+        _executor.run(_taskflow);
+        TickData tick{};
+        zmq_pollitem_t items[] = {{_md_sub_socket.get(), 0, ZMQ_POLLIN, 0}};
+        while (_running.load(std::memory_order_relaxed)) {
+            zmq_poll(items, 1, 100);  // Wait 100ms at most for socket
+            if (items[0].revents & ZMQ_POLLIN &&
+                zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
+                _taskflow.emplace([this, tick] {
+                    if (this->_stg_map.contains(tick.symbol)) {
+                        for (auto&& stg : this->_stg_map[tick.symbol]) {
+                            // visit strategy with the tick data
+                            if (auto order = std::visit([&tick](auto&& strategy) -> std::optional<Order> { return strategy.onTick(tick); }, stg)) {
+                                // send to another
+                                this->_channel.push(order.value());
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        _executor.wait_for_all();  // Wait for all tasks to finish
+    }
+
+    void addStrategy(std::string_view symbol, CtaStrategy strategy) {
+        _stg_map[symbol].emplace_back(std::move(strategy));
+    }
+
+   private:
+    ZmqContext _context{1};  // Single IO thread for simplicity
+    ZmqSocket _md_sub_socket{};
+    tf::Executor _executor;
+    tf::Taskflow _taskflow;
+
+    lockfree::SPSC<Order, 1024> _channel{};
+
+    phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
     std::atomic<bool> _running{true};
 };

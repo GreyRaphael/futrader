@@ -10,6 +10,10 @@ target_link_libraries(engine_cta INTERFACE stra_cta)
 target_include_directories(engine_cta INTERFACE ${PARALLEL_HASHMAP_INCLUDE_DIRS})
 # use zmq
 target_link_libraries(engine_cta INTERFACE libzmq)
+# use taskflow
+target_link_libraries(engine_cta INTERFACE Taskflow::Taskflow)
+# use spsc
+target_link_libraries(engine_cta INTERFACE channel)
 
 if(BUILD_TESTING)
     add_executable(engine_cta_test engine_cta_test.cc)

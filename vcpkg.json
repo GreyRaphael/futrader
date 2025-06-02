@@ -5,6 +5,7 @@
     "frozen",
     "tomlplusplus",
     "zeromq",
-    "parallel-hashmap"
+    "parallel-hashmap",
+    "taskflow"
   ]
 }

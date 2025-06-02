@@ -14,6 +14,7 @@ find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 find_package(frozen CONFIG REQUIRED)
 find_package(ZeroMQ CONFIG REQUIRED)
 find_path(PARALLEL_HASHMAP_INCLUDE_DIRS "parallel_hashmap/btree.h")
+find_package(Taskflow CONFIG REQUIRED)
 
 add_library(duckdb SHARED IMPORTED)
 set_target_properties(duckdb PROPERTIES
