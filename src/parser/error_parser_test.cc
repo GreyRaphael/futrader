@@ -12,11 +12,11 @@ TEST_CASE("testing error msg") {
 }
 
 TEST_CASE("testing disconnection errors") {
-    std::println("{}", errconfig::discon_errors.at(0x1001));
-    std::println("{}", errconfig::discon_errors.at(0x1002));
-    std::println("{}", errconfig::discon_errors.at(0x2001));
-    std::println("{}", errconfig::discon_errors.at(0x2002));
-    std::println("{}", errconfig::discon_errors.at(0x2003));
+    std::println("{}", errconfig::DISCON_ERRORS.at(0x1001));
+    std::println("{}", errconfig::DISCON_ERRORS.at(0x1002));
+    std::println("{}", errconfig::DISCON_ERRORS.at(0x2001));
+    std::println("{}", errconfig::DISCON_ERRORS.at(0x2002));
+    std::println("{}", errconfig::DISCON_ERRORS.at(0x2003));
 }
 
 typedef char TThostFtdcErrorMsgType[81];

@@ -2,6 +2,7 @@
 
 #include <config_parser.h>
 
+#include <chrono>
 #include <cstring>
 #include <dylib.hpp>
 #include <error_parser.hpp>
@@ -12,32 +13,33 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <thread>
 
 struct CtpTdClient::Impl {
     CtpConfig cfg{};
     std::optional<dylib> lib{};
 };
 
-CtpTdClient::CtpTdClient(std::string_view cfg_file) : pImpl(std::make_unique<Impl>()) {
+CtpTdClient::CtpTdClient(std::string_view cfg_file) : pimpl(std::make_unique<Impl>()) {
     // read toml config
-    pImpl->cfg = CtpConfig::read_config(cfg_file, "td");
+    pimpl->cfg = CtpConfig::read_config(cfg_file, "td");
 }
 
 CtpTdClient::~CtpTdClient() { _tdapi->Release(); }
 
 void CtpTdClient::Start() {
     // load dylib
-    auto dylib_path = std::filesystem::path(pImpl->cfg.Interface);
-    pImpl->lib.emplace(dylib_path.parent_path().c_str(), dylib_path.filename().c_str(), dylib::no_filename_decorations);
+    auto dylib_path = std::filesystem::path(pimpl->cfg.Interface);
+    pimpl->lib.emplace(dylib_path.parent_path().c_str(), dylib_path.filename().c_str(), dylib::no_filename_decorations);
 
-    auto GetApiVersion = pImpl->lib->get_function<const char *()>("_ZN19CThostFtdcTraderApi13GetApiVersionEv");
+    auto GetApiVersion = pimpl->lib->get_function<const char *()>("_ZN19CThostFtdcTraderApi13GetApiVersionEv");
     std::println("td_ver={}", GetApiVersion());
-    auto CreateFtdcTraderApi = pImpl->lib->get_function<CThostFtdcTraderApi *(const char *)>("_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKc");
+    auto CreateFtdcTraderApi = pimpl->lib->get_function<CThostFtdcTraderApi *(const char *)>("_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKc");
 
     // register
     _tdapi = CreateFtdcTraderApi("");
     _tdapi->RegisterSpi(this);
-    _tdapi->RegisterFront(pImpl->cfg.Front.data());
+    _tdapi->RegisterFront(pimpl->cfg.Front.data());
 
     // connect
     _tdapi->Init();
@@ -45,18 +47,18 @@ void CtpTdClient::Start() {
 
     // auth
     CThostFtdcReqAuthenticateField auth_req{};
-    pImpl->cfg.BrokerID.copy(auth_req.BrokerID, pImpl->cfg.BrokerID.length());
-    pImpl->cfg.UserID.copy(auth_req.UserID, pImpl->cfg.UserID.length());
-    pImpl->cfg.AppID.copy(auth_req.AppID, pImpl->cfg.AppID.length());
-    pImpl->cfg.AuthCode.copy(auth_req.AuthCode, pImpl->cfg.AuthCode.length());
+    pimpl->cfg.BrokerID.copy(auth_req.BrokerID, pimpl->cfg.BrokerID.length());
+    pimpl->cfg.UserID.copy(auth_req.UserID, pimpl->cfg.UserID.length());
+    pimpl->cfg.AppID.copy(auth_req.AppID, pimpl->cfg.AppID.length());
+    pimpl->cfg.AuthCode.copy(auth_req.AuthCode, pimpl->cfg.AuthCode.length());
     _tdapi->ReqAuthenticate(&auth_req, ++_reqId);
     _sem.acquire();
 
     // login
     CThostFtdcReqUserLoginField login_req{};
-    pImpl->cfg.BrokerID.copy(login_req.BrokerID, pImpl->cfg.BrokerID.length());
-    pImpl->cfg.UserID.copy(login_req.UserID, pImpl->cfg.UserID.length());
-    pImpl->cfg.Password.copy(login_req.Password, pImpl->cfg.Password.length());
+    pimpl->cfg.BrokerID.copy(login_req.BrokerID, pimpl->cfg.BrokerID.length());
+    pimpl->cfg.UserID.copy(login_req.UserID, pimpl->cfg.UserID.length());
+    pimpl->cfg.Password.copy(login_req.Password, pimpl->cfg.Password.length());
     _tdapi->ReqUserLogin(&login_req, ++_reqId);
     _sem.acquire();
 }
@@ -67,7 +69,7 @@ void CtpTdClient::OnFrontConnected() {
 }
 
 void CtpTdClient::OnFrontDisconnected(int nReason) {
-    std::println("OnFrontDisconnected: {}", errconfig::discon_errors.at(nReason));
+    std::println("OnFrontDisconnected: {}", errconfig::DISCON_ERRORS.at(nReason));
 }
 
 void CtpTdClient::OnHeartBeatWarning(int nTimeLapse) {
@@ -245,6 +247,30 @@ void CtpTdClient::QryInstrumentOrderCommRate() {
 
 void CtpTdClient::OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
     handle_resp(pInstrumentOrderCommRate, pRspInfo);
+
+    if (bIsLast) _sem.release();
+}
+
+void CtpTdClient::QryDepthMarketData(std::string_view symbol) {
+    CThostFtdcQryDepthMarketDataField req{};
+    symbol.copy(req.InstrumentID, symbol.length());
+    auto now = std::chrono::system_clock::now();
+
+    while (true) {
+        auto ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
+        if (ret == 0) {
+            std::println("Succeed at {:%F %T}", now);
+            _sem.acquire();
+            break;
+        } else {
+            std::println("ReqQryDepthMarketData ret={} at {:%F %T}, {}", ret, now, errconfig::REQ_ERRORS.at(ret));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+    }
+}
+
+void CtpTdClient::OnRspQryDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+    // handle_resp(pDepthMarketData, pRspInfo);
 
     if (bIsLast) _sem.release();
 }
