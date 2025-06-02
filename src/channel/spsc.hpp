@@ -14,10 +14,10 @@ template <typename T, size_t BufSize>
 class SPSC {
     static constexpr size_t MASK = BufSize - 1;
 
-    std::array<T, BufSize> buffer_{};
+    std::array<T, BufSize> _buffer{};
     // Align write_pos and read_pos to separate cache lines to prevent false sharing
-    alignas(64) std::atomic<size_t> write_pos_{0};
-    alignas(64) std::atomic<size_t> read_pos_{0};
+    alignas(64) std::atomic<size_t> _write_pos{0};
+    alignas(64) std::atomic<size_t> _read_pos{0};
 
    public:
     SPSC() noexcept = default;
@@ -34,50 +34,50 @@ class SPSC {
         requires std::constructible_from<T, U&&>
     bool push(U&& u) noexcept {
         // fetch the up-to-date read_pos once
-        size_t current_write = write_pos_.load(std::memory_order_relaxed);
-        size_t current_read = read_pos_.load(std::memory_order_acquire);
+        size_t current_write = _write_pos.load(std::memory_order_relaxed);
+        size_t current_read = _read_pos.load(std::memory_order_acquire);
 
         // Queue is full
         if (current_write >= current_read + BufSize) return false;
 
         // Write data to the buffer, construct-in-place / assign
-        buffer_[current_write & MASK] = std::forward<U>(u);
+        _buffer[current_write & MASK] = std::forward<U>(u);
 
         // Update the writer index with release semantics to ensure
         // that the write to buffer_ happens-before any subsequent reads by consumers
-        write_pos_.store(current_write + 1, std::memory_order_release);
+        _write_pos.store(current_write + 1, std::memory_order_release);
 
         return true;
     }
     // Pop method
     std::optional<T> pop() noexcept {
         // fetch the up-to-date write_pos once
-        size_t current_read = read_pos_.load(std::memory_order_relaxed);
-        size_t current_write = write_pos_.load(std::memory_order_acquire);
+        size_t current_read = _read_pos.load(std::memory_order_relaxed);
+        size_t current_write = _write_pos.load(std::memory_order_acquire);
 
         // Queue is empty
         if (current_read >= current_write) return std::nullopt;
 
         // Read the item from the buffer, construct the optional directly around the moved value
-        std::optional<T> value{std::in_place, std::move(buffer_[current_read & MASK])};
+        std::optional<T> value{std::in_place, std::move(_buffer[current_read & MASK])};
 
         // Update the read position
-        read_pos_.store(current_read + 1, std::memory_order_release);
+        _read_pos.store(current_read + 1, std::memory_order_release);
 
         return value;
     }
 
     // Non-allocating pop method
     bool pop(T& out) noexcept {
-        size_t current_read = read_pos_.load(std::memory_order_relaxed);
-        size_t current_write = write_pos_.load(std::memory_order_acquire);
+        size_t current_read = _read_pos.load(std::memory_order_relaxed);
+        size_t current_write = _write_pos.load(std::memory_order_acquire);
 
         if (current_read >= current_write) return false;
 
         // Move the item to the output parameter
-        out = std::move(buffer_[current_read & MASK]);
+        out = std::move(_buffer[current_read & MASK]);
 
-        read_pos_.store(current_read + 1, std::memory_order_release);
+        _read_pos.store(current_read + 1, std::memory_order_release);
 
         return true;
     }
