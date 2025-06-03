@@ -15,11 +15,12 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <filesystem>
 
 #include "config_parser.h"
 #include "i_order.h"
 #include "i_quote.h"
-#include "spsc.hpp"
+#include "mpsc.hpp"
 #include "stra_cta.h"
 #include "tick_parser.hpp"
 
@@ -251,7 +252,7 @@ struct CtaEngine {
     tf::Executor _executor;
     tf::Taskflow _taskflow;
 
-    lockfree::SPSC<Order, 1024> _channel{};
+    lockfree::MPSC<Order, 1024> _channel{};
 
     phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
     std::atomic<bool> _running{true};
