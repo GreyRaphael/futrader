@@ -6,6 +6,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <filesystem>
 #include <format>
 #include <optional>
 #include <print>
@@ -15,7 +16,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <filesystem>
 
 #include "config_parser.h"
 #include "i_order.h"
@@ -35,11 +35,11 @@ struct ZmqContext {
     void* get() const noexcept { return _ctx; }
 
    private:
-    void* _ctx;
+    void* _ctx{nullptr};
 };
 
 struct ZmqSocket {
-    ZmqSocket() noexcept : _socket(nullptr) {}
+    ZmqSocket() noexcept = default;
     ZmqSocket(void* ctx, int type, std::string_view addr, bool bind = false) {
         _socket = zmq_socket(ctx, type);
         assert(_socket);
@@ -49,12 +49,15 @@ struct ZmqSocket {
             zmq_connect(_socket, addr.data());
     }
     ~ZmqSocket() {
-        if (_socket) zmq_close(_socket);
+        if (_socket) {
+            zmq_close(_socket);
+            _socket = nullptr;
+        }
     }
     void* get() const noexcept { return _socket; }
 
    private:
-    void* _socket;
+    void* _socket{nullptr};
 };
 
 struct CtaStgWorker {
@@ -188,7 +191,7 @@ struct CtaZmqEngine {
 };
 
 struct CtaEngine {
-    CtaEngine(std::string_view cfg_filename, size_t thread_num = std::thread::hardware_concurrency()) : _executor(thread_num) {
+    CtaEngine(std::string_view cfg_filename, size_t thread_num = std::thread::hardware_concurrency()) : _executor(thread_num), _context(1) {
         assert(std::filesystem::exists(cfg_filename));
         auto config = ZmqConfig::readConfig(cfg_filename);
 
@@ -200,14 +203,16 @@ struct CtaEngine {
         for (auto&& topic : config.symbols) {
             zmq_setsockopt(_md_sub_socket.get(), ZMQ_SUBSCRIBE, topic.data(), topic.length());
         }
-        // clear taskflow
-        _taskflow.clear();
+    }
+
+    void addStrategy(std::string_view symbol, CtaStrategy strategy) {
+        _stg_map[symbol].emplace_back(std::move(strategy));
     }
 
     void start() {
         // start order push socket thread
-        std::jthread order_push_thread([this] {
-            ZmqSocket order_push_socket(_context.get(), ZMQ_PUSH, "ipc://@orders", true);
+        _order_push_thread = std::jthread([this] {
+            ZmqSocket order_push_socket(_context.get(), ZMQ_PUSH, "ipc://@orders", false);
             while (_running.load(std::memory_order_relaxed)) {
                 if (auto order = _channel.pop()) {
                     zmq_send(order_push_socket.get(), &order.value(), sizeof(Order), 0);
@@ -218,14 +223,13 @@ struct CtaEngine {
         });
 
         // start the taskflow
-        _executor.run(_taskflow);
-        TickData tick{};
         zmq_pollitem_t items[] = {{_md_sub_socket.get(), 0, ZMQ_POLLIN, 0}};
         while (_running.load(std::memory_order_relaxed)) {
             zmq_poll(items, 1, 100);  // Wait 100ms at most for socket
+            TickData tick{};
             if (items[0].revents & ZMQ_POLLIN &&
                 zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
-                _taskflow.emplace([this, tick] {
+                _executor.silent_async([this, tick = std::move(tick)] {
                     if (this->_stg_map.contains(tick.symbol)) {
                         for (auto&& stg : this->_stg_map[tick.symbol]) {
                             // visit strategy with the tick data
@@ -242,18 +246,18 @@ struct CtaEngine {
         _executor.wait_for_all();  // Wait for all tasks to finish
     }
 
-    void addStrategy(std::string_view symbol, CtaStrategy strategy) {
-        _stg_map[symbol].emplace_back(std::move(strategy));
+    void stop() {
+        _running.store(false, std::memory_order_relaxed);
     }
 
    private:
-    ZmqContext _context{1};  // Single IO thread for simplicity
+    ZmqContext _context;  // Single IO thread for simplicity
     ZmqSocket _md_sub_socket{};
     tf::Executor _executor;
-    tf::Taskflow _taskflow;
 
     lockfree::MPSC<Order, 1024> _channel{};
 
     phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
     std::atomic<bool> _running{true};
+    std::jthread _order_push_thread;  // Thread for pushing orders to the order socket
 };
