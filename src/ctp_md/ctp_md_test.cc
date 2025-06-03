@@ -133,13 +133,13 @@ TEST_CASE("tts_spsc_stack") {
     }
 }
 
-TEST_CASE("tts_zmq") {
+TEST_CASE("zmq_send") {
     std::string_view cfg_filename{"zmq.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
     auto config = ZmqConfig::readConfig(cfg_filename);
-    REQUIRE(std::filesystem::exists(config.broker_file));  // tts.toml exists
+    REQUIRE(std::filesystem::exists(config.broker_file));  // ctp.toml exists
     REQUIRE(std::filesystem::exists("errors.toml"));
-    REQUIRE(std::filesystem::exists("tts/thostmduserapi_se.so"));
+    REQUIRE(std::filesystem::exists("ctp/thostmduserapi_se.so"));
 
     void* context = zmq_ctx_new();
     void* publisher = zmq_socket(context, ZMQ_PUB);
