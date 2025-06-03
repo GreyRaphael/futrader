@@ -140,6 +140,7 @@ TEST_CASE("zmq_send") {
     REQUIRE(std::filesystem::exists(config.broker_file));  // ctp.toml exists
     REQUIRE(std::filesystem::exists("errors.toml"));
     REQUIRE(std::filesystem::exists("ctp/thostmduserapi_se.so"));
+    REQUIRE(std::filesystem::exists("tts/thostmduserapi_se.so"));
 
     void* context = zmq_ctx_new();
     void* publisher = zmq_socket(context, ZMQ_PUB);
