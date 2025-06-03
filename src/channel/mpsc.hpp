@@ -153,6 +153,32 @@ class MPSC {
 
         return value;
     }
+
+    bool pop(T& out) noexcept {
+        std::size_t pos = _tail.load(std::memory_order_relaxed);
+        Slot& slot = _buffer[pos & MASK];
+
+        std::size_t seq_val = slot.seq.load(std::memory_order_acquire);
+        if (seq_val != pos + 1) {
+            // either queue empty or producer hasn’t yet published this slot
+            return false;
+        }
+
+        // Read out the data (the Release→Acquire pairing on seq
+        // guarantees `slot.data` is fully written).
+        out = std::move(slot.data);
+
+        // “Free” this slot by setting seq → pos + BufSize (Release).
+        slot.seq.store(pos + BufSize, std::memory_order_release);
+
+        // Wake exactly one producer that might be parked on this slot:
+        slot.seq.notify_one();
+
+        // Advance our tail index
+        _tail.store(pos + 1, std::memory_order_relaxed);
+
+        return true;
+    }
 };
 
 }  // namespace lockfree
