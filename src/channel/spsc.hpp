@@ -14,8 +14,10 @@ template <typename T, size_t BufSize>
 class SPSC {
     static constexpr size_t MASK = BufSize - 1;
 
+    // The raw ring buffer storage
     std::array<T, BufSize> _buffer{};
-    // Align write_pos and read_pos to separate cache lines to prevent false sharing
+
+    // Align each atomic on its own cache line to avoid false sharing
     alignas(64) std::atomic<size_t> _write_pos{0};
     alignas(64) std::atomic<size_t> _read_pos{0};
 
@@ -23,63 +25,93 @@ class SPSC {
     SPSC() noexcept = default;
     ~SPSC() noexcept = default;
 
-    // Disable copy and move semantics
+    // no copy / move
     SPSC(const SPSC&) = delete;
     SPSC& operator=(const SPSC&) = delete;
     SPSC(SPSC&&) = delete;
     SPSC& operator=(SPSC&&) = delete;
 
-    // push method
+    // —————————————————————————————————————————————————————————————
+    //  push(): single producer
+    //  Returns false if the queue is “full” at the time of call.
+    //
+    //  Memory‐ordering rationale:
+    //    - We do read_pos.load(acquire) to pair with the consumer’s release
+    //      of read_pos.  That guarantees we see an up-to-date “slots freed.”
+    //    - We write into _buffer[...] first (plain store), then do write_pos.store(..., release).
+    //    - The consumer does write_pos.load(acquire) before reading _buffer.  That sequencing
+    //      guarantees the consumer never sees a “written index” until after the producer’s
+    //      real data write into the buffer.
+    //
     template <typename U>
         requires std::constructible_from<T, U&&>
     bool push(U&& u) noexcept {
-        // fetch the up-to-date read_pos once
-        size_t current_write = _write_pos.load(std::memory_order_relaxed);
-        size_t current_read = _read_pos.load(std::memory_order_acquire);
+        // 1) load local copies of the two indices
+        size_t w = _write_pos.load(std::memory_order_relaxed);
+        size_t r = _read_pos.load(std::memory_order_acquire);
 
-        // Queue is full
-        if (current_write >= current_read + BufSize) return false;
+        // 2) “full” check must be (w - r) >= BufSize, not w >= r + BufSize
+        if ((w - r) >= BufSize) {
+            return false;  // queue is full
+        }
 
-        // Write data to the buffer, construct-in-place / assign
-        _buffer[current_write & MASK] = std::forward<U>(u);
+        // 3) write data into the ring slot
+        _buffer[w & MASK] = std::forward<U>(u);
 
-        // Update the writer index with release semantics to ensure
-        // that the write to buffer_ happens-before any subsequent reads by consumers
-        _write_pos.store(current_write + 1, std::memory_order_release);
-
+        // 4) publish the new write_pos (release)
+        _write_pos.store(w + 1, std::memory_order_release);
         return true;
     }
-    // Pop method
+
+    // —————————————————————————————————————————————————————————————
+    //  pop(): single consumer
+    //  Returns std::nullopt if the queue is empty.
+    //
+    //  Memory‐ordering rationale:
+    //    - We do write_pos.load(acquire) so that we see the producer’s
+    //      release store to write_pos—which in turn pairs with the producer’s
+    //      actual write into _buffer.  That guarantees “slot is ready.”
+    //    - We read _buffer[...] (after seeing write_pos ≥ read_pos + 1), so we know the data is valid.
+    //    - Finally we do read_pos.store(relaxed or release).  Using release is fine;
+    //      producers read read_pos with acquire.  (We could even do relaxed here if we only
+    //      ever read read_pos with acquire, but release is more standard.)
+    //
     std::optional<T> pop() noexcept {
-        // fetch the up-to-date write_pos once
-        size_t current_read = _read_pos.load(std::memory_order_relaxed);
-        size_t current_write = _write_pos.load(std::memory_order_acquire);
+        size_t r = _read_pos.load(std::memory_order_relaxed);
+        size_t w = _write_pos.load(std::memory_order_acquire);
 
-        // Queue is empty
-        if (current_read >= current_write) return std::nullopt;
+        // “empty” check must be (w - r) == 0, not (r >= w)
+        if ((w - r) == 0) {
+            return std::nullopt;  // queue is empty
+        }
 
-        // Read the item from the buffer, construct the optional directly around the moved value
-        std::optional<T> value{std::in_place, std::move(_buffer[current_read & MASK])};
+        // 1) pull the item out
+        T value = std::move(_buffer[r & MASK]);
 
-        // Update the read position
-        _read_pos.store(current_read + 1, std::memory_order_release);
+        // 2) advance read_pos (release)
+        _read_pos.store(r + 1, std::memory_order_release);
 
         return value;
     }
 
-    // Non-allocating pop method
+    // —————————————————————————————————————————————————————————————
+    //  pop(T& out): non-allocating pop
+    //  Returns false if empty, true + writes into ‘out’ otherwise.
     bool pop(T& out) noexcept {
-        size_t current_read = _read_pos.load(std::memory_order_relaxed);
-        size_t current_write = _write_pos.load(std::memory_order_acquire);
+        size_t r = _read_pos.load(std::memory_order_relaxed);
+        size_t w = _write_pos.load(std::memory_order_acquire);
 
-        if (current_read >= current_write) return false;
+        if ((w - r) == 0) {
+            return false;  // queue empty
+        }
 
-        // Move the item to the output parameter
-        out = std::move(_buffer[current_read & MASK]);
+        // move‐into user’s storage
+        out = std::move(_buffer[r & MASK]);
 
-        _read_pos.store(current_read + 1, std::memory_order_release);
-
+        // advance read_pos (release)
+        _read_pos.store(r + 1, std::memory_order_release);
         return true;
     }
 };
+
 }  // namespace lockfree
