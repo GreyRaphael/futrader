@@ -259,8 +259,10 @@ struct CtaEngine {
             if (items[0].revents & ZMQ_POLLIN &&
                 zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
                 _executor.silent_async([this, tick = std::move(tick)] {
-                    if (this->_stg_map.contains(tick.symbol)) {
-                        for (auto&& stg : this->_stg_map[tick.symbol]) {
+                    // look up only once
+                    auto it = _stg_map.find(tick.symbol);
+                    if (it != _stg_map.end()) {
+                        for (auto&& stg : it->second) {
                             // visit strategy with the tick data
                             if (auto order = std::visit([&tick](auto&& strategy) -> std::optional<Order> { return strategy.onTick(tick); }, stg)) {
                                 // send to another
