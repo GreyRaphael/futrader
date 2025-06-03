@@ -15,7 +15,7 @@
 #include <bt_md.hpp>
 #include <spsc.hpp>
 
-TEST_CASE("duckdb") {
+TEST_CASE("bt_direct") {
     std::string_view cfg_filename{"bt.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
 
@@ -33,7 +33,7 @@ TEST_CASE("duckdb") {
 
 using TickDataChannel = lockfree::SPSC<TickData, 1024>;
 
-TEST_CASE("duckdb_spsc") {
+TEST_CASE("bt_spsc") {
     // db to SPSC is bad, as db will make SPSC full
     std::string_view cfg_filename{"bt.toml"};
     REQUIRE(std::filesystem::exists(cfg_filename));
@@ -68,7 +68,7 @@ TEST_CASE("duckdb_spsc") {
     }
 }
 
-TEST_CASE("duckdb_zmq_send") {
+TEST_CASE("bt_zmq_send") {
     std::string_view cfg_filename = "zmq.toml";
     REQUIRE(std::filesystem::exists(cfg_filename));
     auto config = ZmqConfig::readConfig(cfg_filename);
@@ -95,7 +95,7 @@ TEST_CASE("duckdb_zmq_send") {
     zmq_ctx_term(context);
 }
 
-TEST_CASE("duckdb_zmq_recv") {
+TEST_CASE("zmq_recv") {
     std::string_view cfg_filename = "zmq.toml";
     REQUIRE(std::filesystem::exists(cfg_filename));
     auto config = ZmqConfig::readConfig(cfg_filename);
@@ -115,10 +115,11 @@ TEST_CASE("duckdb_zmq_recv") {
     zmq_connect(subscriber, config.address.c_str());
 
     // Subscribe topics
-    std::vector<std::string> topics = {"rb", "MA"};
-    for (auto&& topic : topics) {
-        zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, topic.data(), topic.length());
-    }
+    // std::vector<std::string> topics = {"rb", "MA"};
+    // for (auto&& topic : topics) {
+    //     zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, topic.data(), topic.length());
+    // }
+    zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, "", 0);
 
     TickData tick{};
     size_t count = 0;
@@ -140,7 +141,8 @@ TEST_CASE("duckdb_zmq_recv") {
         ++count;
         // Process the received tick data
         auto tp = std::chrono::sys_time<std::chrono::milliseconds>{std::chrono::milliseconds{tick.stamp}};
-        std::println("> {},{},{},count={}", tick.symbol, tp, tick.last, count);
+        print_struct(&tick);
+        // std::println("> {},{},{},count={}", tick.symbol, tp, tick.last, count);
     }
 
     // Cleanup (will not be reached in this infinite loop)

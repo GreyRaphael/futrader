@@ -1,5 +1,6 @@
 # Address = "ipc:///tmp/pubsub.ipc"
-Address = "ipc://@hq" # Linux Only
+# Linux Only
+Address = "ipc://@hq"
 PollIntervalMs = 10
 BrokerFile = "tts.toml"
-Symbols = ["MA509", "rb2507"]
+Symbols = ["hc2510", "l2509", "MA509", "bc2507", "lc2507", "IC2506"]
