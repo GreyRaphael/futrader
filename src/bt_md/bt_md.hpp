@@ -113,7 +113,7 @@ void BactestMdClient<CB>::start() {
     for (auto r = 0; r < rows; r++) {
         auto code = duckdb_value_string(&_result, 0, r);
         memcpy(tick.symbol, code.data, code.size);
-        tick.symbol[code.size] = '\0';
+        tick.symbol[code.size] = '\0'; // this is very necessary
 
         tick.stamp = duckdb_value_int64(&_result, 1, r);
         tick.last = duckdb_value_double(&_result, 2, r);
