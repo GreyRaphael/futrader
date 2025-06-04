@@ -105,6 +105,7 @@ struct CtaEngine {
      * we can find all strategies for “AAPL” quickly.
      */
     void addStrategy(std::string_view symbol, CtaStrategy strategy) {
+        // only take the ownership of temporary variable strategy
         _stg_map[symbol].emplace_back(std::move(strategy));
         zmq_setsockopt(_md_sub_socket.get(), ZMQ_SUBSCRIBE, symbol.data(), symbol.length());
     }

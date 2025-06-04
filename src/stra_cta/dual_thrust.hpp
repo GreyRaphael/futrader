@@ -31,7 +31,7 @@ struct DualThrust {
         if (_position == 0) {
             if (tick.last >= buy_threshold) {
                 // 价格突破买入阈值，触发开多头仓位
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::BUY;
@@ -41,7 +41,7 @@ struct DualThrust {
             }
             if (tick.last <= sell_threshold) {
                 // 价格突破卖出阈值，触发开空头仓位
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::SELL;
@@ -54,7 +54,7 @@ struct DualThrust {
         if (_position > 0) {
             // 持有多头仓位，平仓条件：价格低于开盘价
             if (tick.last < _open) {
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::SELL;
@@ -67,7 +67,7 @@ struct DualThrust {
         } else if (_position < 0) {
             // 持有空头仓位，平仓条件：价格高于开盘价
             if (tick.last > _open) {
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::BUY;

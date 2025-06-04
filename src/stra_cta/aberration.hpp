@@ -18,7 +18,7 @@ struct Aberration {
         if (_position == 0) {
             if (tick.last > mean + 2 * standard_deviation) {
                 // 价格偏离均值超过2个标准差，触发开仓
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::BUY;
@@ -29,7 +29,7 @@ struct Aberration {
 
             if (tick.last < mean - 2 * standard_deviation) {
                 // 价格偏离均值超过2个标准差，触发开仓
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::SELL;
@@ -42,7 +42,7 @@ struct Aberration {
         if (_position > 0) {
             // 持有多头头寸，检查是否需要平仓
             if (tick.last < mean) {
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::SELL;
@@ -53,7 +53,7 @@ struct Aberration {
         } else if (_position < 0) {
             // 持有空头头寸，检查是否需要平仓
             if (tick.last > mean) {
-                memcpy(_order.symbol, tick.symbol, sizeof(SymbolType));
+                memcpy(_order.symbol, tick.symbol, SYMBOL_SIZE);
                 _order.timestamp = tick.stamp;
                 _order.volume = _lots;
                 _order.direction = DirectionType::BUY;
