@@ -6,15 +6,8 @@
 #include "aberration.hpp"
 #include "stra_cta.h"
 
-TEST_CASE("cta") {
-    CtaEngine engine{"zmq.toml", 4};
-    Aberration abb{};
-    engine.addStrategy("IC2506", abb);
-    engine.start();
-}
-
 TEST_CASE("bt") {
-    CtaEngine engine{"zmq.toml", 4};
+    CtaEngine engine{"ipc://@hq", 4};
     Aberration abb{};
     engine.addStrategy("rb2505", abb);
     // engine.addStrategy("MA5055", abb);

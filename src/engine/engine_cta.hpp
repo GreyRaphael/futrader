@@ -222,23 +222,16 @@ struct CtaZmqEngine {
 
 struct CtaEngine {
     /**
-     * @param cfg_filename  - path to your TOML file that lists addresses & symbols
+     * @param zmq_addr  - path to your zeromq url
      * @param thread_num    - number of worker threads for Taskflow’s Executor
      */
-    CtaEngine(std::string_view cfg_filename, size_t thread_num = std::thread::hardware_concurrency())
-        : _executor(thread_num), _context(1) {
-        assert(std::filesystem::exists(cfg_filename));
-        auto config = ZmqConfig::readConfig(cfg_filename);
-
-        _stg_map.reserve(config.symbols.size());
-        // subscribe to market data
-        // attention RAII: Assigning from a temporary calls move, not copy
-        _md_sub_socket = ZmqSocket(_context.get(), ZMQ_SUB, config.address, false);
-        int rcvhwm = 0;  // Adjust as needed
+    CtaEngine(std::string_view zmq_addr, size_t thread_num = std::thread::hardware_concurrency())
+        : _executor(thread_num),  // worker number
+          _context(1),
+          _md_sub_socket(_context.get(), ZMQ_SUB, zmq_addr.data(), false) {
+        // no limit for recv message numbers, adjust as needed
+        int rcvhwm = 0;
         zmq_setsockopt(_md_sub_socket.get(), ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
-        for (auto&& topic : config.symbols) {
-            zmq_setsockopt(_md_sub_socket.get(), ZMQ_SUBSCRIBE, topic.data(), topic.length());
-        }
     }
 
     /**
@@ -248,6 +241,7 @@ struct CtaEngine {
      */
     void addStrategy(std::string_view symbol, CtaStrategy strategy) {
         _stg_map[symbol].emplace_back(std::move(strategy));
+        zmq_setsockopt(_md_sub_socket.get(), ZMQ_SUBSCRIBE, symbol.data(), symbol.length());
     }
 
     /**
@@ -312,12 +306,12 @@ struct CtaEngine {
 
    private:
     ZmqContext _context;  // Single IO thread for simplicity
-    ZmqSocket _md_sub_socket{};
+    ZmqSocket _md_sub_socket;
     tf::Executor _executor;
 
     lockfree::MPSC<Order, 1024> _channel{};
 
-    phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map;
+    phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map{};
     std::atomic<bool> _running{true};
     std::jthread _order_push_thread;  // Thread for pushing orders to the order socket
 };

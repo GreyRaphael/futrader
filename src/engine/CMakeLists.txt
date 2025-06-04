@@ -20,12 +20,5 @@ if(BUILD_TESTING)
     target_link_libraries(engine_cta_test PRIVATE engine_cta)
     target_link_libraries(engine_cta_test PRIVATE doctest::doctest)
 
-    # copy zmq.toml
-    configure_file(
-        "${CMAKE_SOURCE_DIR}/config/zmq.toml"
-        "${CMAKE_CURRENT_BINARY_DIR}/zmq.toml"
-        COPYONLY
-    )
-
     add_test(NAME engine_cta_test COMMAND engine_cta_test)
 endif()
