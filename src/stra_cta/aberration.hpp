@@ -63,14 +63,7 @@ struct Aberration {
             }
         }
 
-        return Order{
-            "IC2506",
-            1749001501000,
-            1,
-            DirectionType::BUY,
-            OffsetFlagType::OPEN,
-            "Aberration",
-        };
+        return std::nullopt;
     }
 
    private:

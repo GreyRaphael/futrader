@@ -20,12 +20,12 @@ enum class OffsetFlagType : uint8_t {
 };
 
 struct Order {
+    StrategyType stg_name;    // Name of the strategy that generated the order
     SymbolType symbol;        // Symbol of the order
     int64_t timestamp;        // Order timestamp in milliseconds
     uint32_t volume;          // Volume of the order
     DirectionType direction;  // Direction of the order (BUY/SELL)
     OffsetFlagType offset;    // Offset flag (OPEN/CLOSE)
-    StrategyType stg_name;    // Name of the strategy that generated the order
 };
 
 // The folloiwng is for print_struct
