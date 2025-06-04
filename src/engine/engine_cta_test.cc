@@ -1,12 +1,14 @@
-#include <string_view>
-#include <vector>
-
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include <doctest/doctest.h>
-
 #include "engine_cta.hpp"
 
+#include <doctest/doctest.h>
+
+#include "aberration.hpp"
+#include "stra_cta.h"
+
 TEST_CASE("cta") {
-    // std::vector<std::string> symbols{"AAPL", "GOOGL", "MSFT"};
-    // CtaZmqEngine engine{"zmq.toml"};
+    CtaEngine engine{"zmq.toml", 4};
+    Aberration abb{};
+    engine.addStrategy("IC2506", abb);
+    engine.start();
 }

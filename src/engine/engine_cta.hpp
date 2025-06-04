@@ -22,6 +22,7 @@
 #include "i_quote.h"
 #include "mpsc.hpp"
 #include "stra_cta.h"
+#include "struct_parser.hpp"
 #include "tick_parser.hpp"
 
 // RAII Wrapper for ZeroMQ Context
@@ -56,6 +57,27 @@ struct ZmqSocket {
         else  // as client
             zmq_connect(_socket, addr.data());
     }
+
+    // Delete copy to avoid double‐close
+    ZmqSocket(const ZmqSocket&) = delete;
+    ZmqSocket& operator=(const ZmqSocket&) = delete;
+
+    // Provide move constructor
+    ZmqSocket(ZmqSocket&& other) noexcept
+        : _socket(other._socket) {
+        other._socket = nullptr;
+    }
+
+    // Provide move assignment
+    ZmqSocket& operator=(ZmqSocket&& other) noexcept {
+        if (this != &other) {
+            if (_socket) zmq_close(_socket);
+            _socket = other._socket;
+            other._socket = nullptr;
+        }
+        return *this;
+    }
+
     ~ZmqSocket() {
         if (_socket) {
             zmq_close(_socket);
@@ -210,6 +232,7 @@ struct CtaEngine {
 
         _stg_map.reserve(config.symbols.size());
         // subscribe to market data
+        // attention RAII: Assigning from a temporary calls move, not copy
         _md_sub_socket = ZmqSocket(_context.get(), ZMQ_SUB, config.address, false);
         int rcvhwm = 0;  // Adjust as needed
         zmq_setsockopt(_md_sub_socket.get(), ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
@@ -244,6 +267,7 @@ struct CtaEngine {
             ZmqSocket order_push_socket(_context.get(), ZMQ_PUSH, "ipc://@orders", false);
             while (_running.load(std::memory_order_relaxed)) {
                 if (auto order = _channel.pop()) {
+                    print_struct(&order.value());
                     zmq_send(order_push_socket.get(), &order.value(), sizeof(Order), 0);
                 } else {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));  // Avoid busy waiting
@@ -258,6 +282,7 @@ struct CtaEngine {
             TickData tick{};
             if (items[0].revents & ZMQ_POLLIN &&
                 zmq_recv(_md_sub_socket.get(), &tick, sizeof(TickData), 0) > 0) {
+                // print_struct(&tick);
                 _executor.silent_async([this, tick = std::move(tick)] {
                     // look up only once
                     auto it = _stg_map.find(tick.symbol);
