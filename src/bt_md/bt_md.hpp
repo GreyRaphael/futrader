@@ -109,8 +109,8 @@ void BactestMdClient<CB>::start() {
 
     // iter records
     auto rows = duckdb_row_count(&_result);
-    TickData tick{};
     for (auto r = 0; r < rows; r++) {
+        TickData tick{};
         auto code = duckdb_value_string(&_result, 0, r);
         memcpy(tick.symbol, code.data, code.size);
 
