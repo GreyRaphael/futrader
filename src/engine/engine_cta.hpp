@@ -176,7 +176,7 @@ struct CtaEngine {
 
     lockfree::MPSC<Order, 1024> _channel{};
 
-    phmap::flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map{};
+    phmap::parallel_flat_hash_map<std::string, std::vector<CtaStrategy>> _stg_map{};
     std::atomic<bool> _running{true};
     std::jthread _order_push_thread;  // Thread for pushing orders to the order socket
 };
