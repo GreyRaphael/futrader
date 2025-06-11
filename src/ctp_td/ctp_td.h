@@ -60,5 +60,5 @@ struct CtpTdClient : CThostFtdcTraderSpi {
 
     CThostFtdcTraderApi *_tdapi{};
     std::binary_semaphore _sem{0};
-    int _reqId{0};
+    int _req_id{0};
 };

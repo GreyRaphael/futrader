@@ -51,7 +51,7 @@ void CtpTdClient::Start() {
     pimpl->cfg.UserID.copy(auth_req.UserID, pimpl->cfg.UserID.length());
     pimpl->cfg.AppID.copy(auth_req.AppID, pimpl->cfg.AppID.length());
     pimpl->cfg.AuthCode.copy(auth_req.AuthCode, pimpl->cfg.AuthCode.length());
-    _tdapi->ReqAuthenticate(&auth_req, ++_reqId);
+    _tdapi->ReqAuthenticate(&auth_req, ++_req_id);
     _sem.acquire();
 
     // login
@@ -59,7 +59,7 @@ void CtpTdClient::Start() {
     pimpl->cfg.BrokerID.copy(login_req.BrokerID, pimpl->cfg.BrokerID.length());
     pimpl->cfg.UserID.copy(login_req.UserID, pimpl->cfg.UserID.length());
     pimpl->cfg.Password.copy(login_req.Password, pimpl->cfg.Password.length());
-    _tdapi->ReqUserLogin(&login_req, ++_reqId);
+    _tdapi->ReqUserLogin(&login_req, ++_req_id);
     _sem.acquire();
 }
 
@@ -90,7 +90,7 @@ void CtpTdClient::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CTh
 
 void CtpTdClient::SettlementInfo() {
     CThostFtdcSettlementInfoConfirmField req{};
-    _tdapi->ReqSettlementInfoConfirm(&req, ++_reqId);
+    _tdapi->ReqSettlementInfoConfirm(&req, ++_req_id);
     _sem.acquire();
 }
 
@@ -102,7 +102,7 @@ void CtpTdClient::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmFiel
 
 void CtpTdClient::QryInvestorPosition() {
     CThostFtdcQryInvestorPositionField req{};
-    _tdapi->ReqQryInvestorPosition(&req, ++_reqId);
+    _tdapi->ReqQryInvestorPosition(&req, ++_req_id);
     _sem.acquire();
 }
 
@@ -114,7 +114,7 @@ void CtpTdClient::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInv
 
 void CtpTdClient::QryTradingAccount() {
     CThostFtdcQryTradingAccountField req{};
-    _tdapi->ReqQryTradingAccount(&req, ++_reqId);
+    _tdapi->ReqQryTradingAccount(&req, ++_req_id);
     _sem.acquire();
 }
 
@@ -136,7 +136,7 @@ void CtpTdClient::OrderInsert(std::string_view symbol, TThostFtdcDirectionType d
         req.LimitPrice = price;
     }
     // todo
-    _tdapi->ReqOrderInsert(&req, ++_reqId);
+    _tdapi->ReqOrderInsert(&req, ++_req_id);
 }
 
 void CtpTdClient::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -177,7 +177,7 @@ bool CtpTdClient::Buy2Cover(std::string_view symbol, int lot, double price) {
 void CtpTdClient::OrderAction() {
     CThostFtdcInputOrderActionField req{};
     // todo
-    _tdapi->ReqOrderAction(&req, ++_reqId);
+    _tdapi->ReqOrderAction(&req, ++_req_id);
 }
 
 void CtpTdClient::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -190,13 +190,13 @@ void CtpTdClient::QryInstrument(std::vector<std::string> exchange_ids) {
     if (exchange_ids.empty()) {
         CThostFtdcQryInstrumentField req{};
         // 获取所有交易所全部合约列表
-        _tdapi->ReqQryInstrument(&req, ++_reqId);
+        _tdapi->ReqQryInstrument(&req, ++_req_id);
     } else {
         for (auto &&e : exchange_ids) {
             CThostFtdcQryInstrumentField req{};
             e.copy(req.ExchangeID, e.length());
             // 获取对应交易所全部合约列表
-            _tdapi->ReqQryInstrument(&req, ++_reqId);
+            _tdapi->ReqQryInstrument(&req, ++_req_id);
         }
     }
 }
@@ -209,7 +209,7 @@ void CtpTdClient::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CTh
 
 void CtpTdClient::QryExchange() {
     CThostFtdcQryExchangeField req{};
-    _tdapi->ReqQryExchange(&req, ++_reqId);
+    _tdapi->ReqQryExchange(&req, ++_req_id);
 }
 
 void CtpTdClient::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -220,7 +220,7 @@ void CtpTdClient::OnRspQryExchange(CThostFtdcExchangeField *pExchange, CThostFtd
 
 void CtpTdClient::QryProduct() {
     CThostFtdcQryProductField req{};
-    _tdapi->ReqQryProduct(&req, ++_reqId);
+    _tdapi->ReqQryProduct(&req, ++_req_id);
 }
 
 void CtpTdClient::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -231,7 +231,7 @@ void CtpTdClient::OnRspQryProduct(CThostFtdcProductField *pProduct, CThostFtdcRs
 
 void CtpTdClient::QryInstrumentCommissionRate() {
     CThostFtdcQryInstrumentCommissionRateField req{};
-    _tdapi->ReqQryInstrumentCommissionRate(&req, ++_reqId);
+    _tdapi->ReqQryInstrumentCommissionRate(&req, ++_req_id);
 }
 
 void CtpTdClient::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -242,7 +242,7 @@ void CtpTdClient::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissio
 
 void CtpTdClient::QryInstrumentOrderCommRate() {
     CThostFtdcQryInstrumentOrderCommRateField req{};
-    _tdapi->ReqQryInstrumentOrderCommRate(&req, ++_reqId);
+    _tdapi->ReqQryInstrumentOrderCommRate(&req, ++_req_id);
 }
 
 void CtpTdClient::OnRspQryInstrumentOrderCommRate(CThostFtdcInstrumentOrderCommRateField *pInstrumentOrderCommRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -257,7 +257,7 @@ void CtpTdClient::QryDepthMarketData(std::string_view symbol) {
     auto now = std::chrono::system_clock::now();
 
     while (true) {
-        auto ret = _tdapi->ReqQryDepthMarketData(&req, ++_reqId);
+        auto ret = _tdapi->ReqQryDepthMarketData(&req, ++_req_id);
         if (ret == 0) {
             std::println("Succeed at {:%F %T}", now);
             _sem.acquire();
