@@ -22,6 +22,7 @@ struct CtpTdClient : CThostFtdcTraderSpi {
    public:
     void start();
     void orderInsert(std::string_view symbol, TThostFtdcDirectionType direction, TThostFtdcOffsetFlagType offset, TThostFtdcPriceType price, TThostFtdcVolumeType lot, bool is_stop);
+    void orderAction();
 
    private:
     void OnFrontConnected() override;
@@ -111,4 +112,10 @@ void CtpTdClient::orderInsert(std::string_view symbol, TThostFtdcDirectionType d
     }
     // todo
     _api->ReqOrderInsert(&req, ++_req_id);
+}
+
+void CtpTdClient::orderAction() {
+    CThostFtdcInputOrderActionField req{};
+    // todo
+    _api->ReqOrderAction(&req, ++_req_id);
 }
