@@ -8,13 +8,11 @@
 typedef char StrategyType[32];
 
 enum class DirectionType : uint8_t {
-    NONE,
     BUY,
     SELL,
 };
 
 enum class OffsetFlagType : uint8_t {
-    NONE,
     OPEN,
     CLOSE,
 };
@@ -46,9 +44,6 @@ struct formatter<E> : formatter<uint8_t> {
 //     auto format(DirectionType dir, format_context &ctx) const {
 //         std::string_view name = "UNKNOWN";
 //         switch (dir) {
-//             case DirectionType::NONE:
-//                 name = "NONE";
-//                 break;
 //             case DirectionType::BUY:
 //                 name = "BUY";
 //                 break;
@@ -65,9 +60,6 @@ struct formatter<E> : formatter<uint8_t> {
 //     auto format(OffsetFlagType flag, format_context &ctx) const {
 //         std::string_view name = "UNKNOWN";
 //         switch (flag) {
-//             case OffsetFlagType::NONE:
-//                 name = "NONE";
-//                 break;
 //             case OffsetFlagType::OPEN:
 //                 name = "OPEN";
 //                 break;
